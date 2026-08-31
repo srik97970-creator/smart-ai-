@@ -1,0 +1,14 @@
+[
+  {
+    "product_id": "pro_7743_247",
+    "offer_type": "Percentage Discount",
+    "original_price": 50,
+    "discount": 10,
+    "offer_price": 45,
+    "start_date": "2026-08-31",
+    "end_date": "2026-09-07",
+    "status": "active",
+    "id": "off_1558_635",
+    "created_at": "2026-08-31T15:25:01.558Z"
+  }
+]

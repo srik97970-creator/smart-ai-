@@ -1,0 +1,11 @@
+[
+  {
+    "id": "ins_slow_pro_7743_247",
+    "type": "slow_moving",
+    "priority": "medium",
+    "ref_id": "pro_7743_247",
+    "message": "📦 Slow-Moving Stock: Sugar 1kg has high inventory and slow sales.",
+    "recommendation": "Stock is high (100 units) with only 0 sold this week. You have a healthy profit margin of 16%. We recommend creating a 10% promotional offer to accelerate sales.",
+    "created_at": "2026-08-31T13:54:07.770Z"
+  }
+]

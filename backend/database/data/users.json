@@ -1,0 +1,8 @@
+[
+  {
+    "id": "usr_admin",
+    "username": "admin",
+    "password": "smartshop",
+    "role": "admin"
+  }
+]

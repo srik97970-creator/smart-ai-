@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Sugar 1kg",
+    "category": "Grocery",
+    "brand": "Madhur",
+    "sku": "SUGAR-1KG",
+    "barcode": "890123450002",
+    "purchase_price": 42,
+    "selling_price": 50,
+    "quantity": 100,
+    "minimum_stock": 5,
+    "supplier": "",
+    "expiry_date": "",
+    "id": "pro_7743_247",
+    "created_at": "2026-08-31T13:54:07.743Z"
+  }
+]
