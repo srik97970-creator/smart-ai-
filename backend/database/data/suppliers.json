@@ -1,0 +1,22 @@
+[
+  {
+    "id": "sup_balaji",
+    "name": "Ramesh Reddy",
+    "company_name": "Sri Balaji Wholesalers",
+    "phone": "9848011223",
+    "address": "Market Yard, Shop #14",
+    "balance": 8500,
+    "notes": "Rice & Grains Distributor",
+    "created_at": "2026-08-31T17:30:31.598Z"
+  },
+  {
+    "id": "sup_laxmi",
+    "name": "Venkat Rao",
+    "company_name": "Laxmi Provisions Agency",
+    "phone": "9440567890",
+    "address": "Industrial Area, Godown 4",
+    "balance": 3200,
+    "notes": "Oils & FMCG Supplier",
+    "created_at": "2026-08-31T17:30:31.600Z"
+  }
+]

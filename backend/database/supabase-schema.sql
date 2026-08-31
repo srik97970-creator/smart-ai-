@@ -161,3 +161,55 @@ CREATE TABLE IF NOT EXISTS credit_payments (
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
+
+-- 13. Create Suppliers table
+CREATE TABLE IF NOT EXISTS suppliers (
+    id TEXT PRIMARY KEY,
+    shop_id TEXT REFERENCES shops(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    company_name TEXT,
+    phone TEXT NOT NULL,
+    address TEXT,
+    balance NUMERIC(12,2) DEFAULT 0.00,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- 14. Create Supplier Transactions table
+CREATE TABLE IF NOT EXISTS supplier_transactions (
+    id TEXT PRIMARY KEY,
+    supplier_id TEXT REFERENCES suppliers(id) ON DELETE CASCADE,
+    shop_id TEXT REFERENCES shops(id) ON DELETE SET NULL,
+    type TEXT NOT NULL, -- 'bill' (goods bought on credit) or 'payment' (paid to supplier)
+    amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    bill_number TEXT,
+    payment_method TEXT DEFAULT 'cash',
+    transaction_date TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    due_date TIMESTAMP WITH TIME ZONE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- 15. Create Cashbook Entries table
+CREATE TABLE IF NOT EXISTS cashbook_entries (
+    id TEXT PRIMARY KEY,
+    shop_id TEXT REFERENCES shops(id) ON DELETE CASCADE,
+    type TEXT NOT NULL, -- 'in' (Cash In) or 'out' (Cash Out)
+    amount NUMERIC(12,2) NOT NULL DEFAULT 0.00,
+    category TEXT NOT NULL, -- 'sale', 'debt_collected', 'supplier_payment', 'expense', 'other'
+    payment_mode TEXT DEFAULT 'cash', -- 'cash', 'upi', 'bank'
+    notes TEXT,
+    entry_date TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- 16. Create Khata Books table
+CREATE TABLE IF NOT EXISTS khata_books (
+    id TEXT PRIMARY KEY,
+    shop_id TEXT REFERENCES shops(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    type TEXT DEFAULT 'store',
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);

@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": "tx_c1",
+    "customer_id": "cust_ravi",
+    "credit_amount": 2450,
+    "amount_paid": 550,
+    "outstanding_amount": 2450,
+    "credit_date": "2026-08-28T17:30:31.594Z",
+    "due_date": "2026-09-04T17:30:31.594Z",
+    "status": "due",
+    "notes": "Rice 10kg & Dal 2kg Purchase",
+    "created_at": "2026-08-31T17:30:31.594Z"
+  },
+  {
+    "id": "tx_c2",
+    "customer_id": "cust_srinivas",
+    "credit_amount": 1200,
+    "amount_paid": 0,
+    "outstanding_amount": 1200,
+    "credit_date": "2026-08-30T17:30:31.595Z",
+    "due_date": "2026-09-06T17:30:31.595Z",
+    "status": "due",
+    "notes": "Sunflower Oil & Spices",
+    "created_at": "2026-08-31T17:30:31.595Z"
+  }
+]

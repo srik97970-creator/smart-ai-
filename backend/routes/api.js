@@ -857,4 +857,331 @@ router.get('/customers/:id/ledger', async (req, res) => {
   }
 });
 
+// 14. KHATA BOOKS (MULTI-BOOK) ENDPOINTS
+router.get('/khatabooks', async (req, res) => {
+  try {
+    const books = await db.find('khata_books');
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/khatabooks', async (req, res) => {
+  const { name, type } = req.body;
+  if (!name) return res.status(400).json({ error: 'Book name is required' });
+  try {
+    const newBook = await db.insert('khata_books', {
+      name,
+      type: type || 'store',
+      is_default: false,
+      created_at: new Date().toISOString()
+    });
+    res.status(201).json(newBook);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 15. SUPPLIER KHATA (VYAPARI) ENDPOINTS
+router.get('/suppliers', async (req, res) => {
+  try {
+    const suppliers = await db.find('suppliers');
+    suppliers.sort((a, b) => (Number(b.balance) || 0) - (Number(a.balance) || 0));
+    res.json(suppliers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/suppliers', async (req, res) => {
+  const { name, company_name, phone, address, balance, notes } = req.body;
+  if (!name || !phone) {
+    return res.status(400).json({ error: 'Supplier name and phone number are required' });
+  }
+  try {
+    const initialBal = Number(balance) || 0;
+    const newSupplier = await db.insert('suppliers', {
+      name,
+      company_name: company_name || '',
+      phone,
+      address: address || '',
+      balance: initialBal,
+      notes: notes || '',
+      created_at: new Date().toISOString()
+    });
+
+    if (initialBal > 0) {
+      await db.insert('supplier_transactions', {
+        supplier_id: newSupplier.id,
+        type: 'bill',
+        amount: initialBal,
+        bill_number: 'OPENING-BAL',
+        payment_method: 'credit',
+        transaction_date: new Date().toISOString(),
+        notes: 'Opening Balance (Credit)'
+      });
+    }
+
+    res.status(201).json(newSupplier);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/suppliers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const updated = await db.update('suppliers', id, req.body);
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/suppliers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.delete('suppliers', id);
+    res.json({ message: 'Supplier deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/supplier-transactions', async (req, res) => {
+  const { supplier_id, type, amount, bill_number, payment_method, notes, due_date } = req.body;
+  if (!supplier_id || !type || !amount || Number(amount) <= 0) {
+    return res.status(400).json({ error: 'Supplier, transaction type, and valid positive amount are required' });
+  }
+
+  try {
+    const supplier = await db.findById('suppliers', supplier_id);
+    if (!supplier) return res.status(404).json({ error: 'Supplier not found' });
+
+    const numAmount = Number(amount);
+    const curBalance = Number(supplier.balance) || 0;
+    let newBalance = curBalance;
+
+    if (type === 'bill') {
+      // Bought goods on credit -> You owe more
+      newBalance = curBalance + numAmount;
+    } else if (type === 'payment') {
+      // Made payment to supplier -> You owe less
+      newBalance = Math.max(0, curBalance - numAmount);
+
+      // Auto-log Cash Out in Cashbook if paid via cash
+      if (payment_method === 'cash') {
+        await db.insert('cashbook_entries', {
+          type: 'out',
+          amount: numAmount,
+          category: 'supplier_payment',
+          payment_mode: 'cash',
+          notes: `Paid to Supplier: ${supplier.name} ${bill_number ? `(Bill #${bill_number})` : ''}`,
+          entry_date: new Date().toISOString()
+        });
+      }
+    } else {
+      return res.status(400).json({ error: 'Invalid transaction type (must be "bill" or "payment")' });
+    }
+
+    await db.update('suppliers', supplier_id, {
+      balance: newBalance,
+      updated_at: new Date().toISOString()
+    });
+
+    const tx = await db.insert('supplier_transactions', {
+      supplier_id,
+      type,
+      amount: numAmount,
+      bill_number: bill_number || '',
+      payment_method: payment_method || 'cash',
+      transaction_date: new Date().toISOString(),
+      due_date: due_date || null,
+      notes: notes || (type === 'bill' ? 'Purchase on Credit' : 'Payment Made')
+    });
+
+    res.status(201).json({ success: true, transaction: tx, new_balance: newBalance });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/suppliers/:id/ledger', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const supplier = await db.findById('suppliers', id);
+    if (!supplier) return res.status(404).json({ error: 'Supplier not found' });
+
+    const allTx = await db.find('supplier_transactions');
+    const supTx = allTx.filter(t => t.supplier_id === id);
+    supTx.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date));
+
+    const totalBills = supTx.filter(t => t.type === 'bill').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const totalPayments = supTx.filter(t => t.type === 'payment').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+
+    res.json({
+      supplier,
+      transactions: supTx,
+      summary: {
+        totalBills,
+        totalPayments,
+        balance: supplier.balance || 0
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 16. DAILY CASH BOOK (ROKAR KHATA) ENDPOINTS
+router.get('/cashbook', async (req, res) => {
+  try {
+    const entries = await db.find('cashbook_entries');
+    entries.sort((a, b) => new Date(b.entry_date) - new Date(a.entry_date));
+    res.json(entries);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cashbook', async (req, res) => {
+  const { type, amount, category, payment_mode, notes, entry_date } = req.body;
+  if (!type || !amount || Number(amount) <= 0) {
+    return res.status(400).json({ error: 'Entry type and valid amount are required' });
+  }
+  try {
+    const newEntry = await db.insert('cashbook_entries', {
+      type, // 'in' or 'out'
+      amount: Number(amount),
+      category: category || (type === 'in' ? 'sale' : 'expense'),
+      payment_mode: payment_mode || 'cash',
+      notes: notes || '',
+      entry_date: entry_date || new Date().toISOString(),
+      created_at: new Date().toISOString()
+    });
+    res.status(201).json(newEntry);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/cashbook/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.delete('cashbook_entries', id);
+    res.json({ message: 'Cashbook entry deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/cashbook/summary', async (req, res) => {
+  try {
+    const entries = await db.find('cashbook_entries');
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const todayIn = entries
+      .filter(e => e.type === 'in' && e.entry_date && e.entry_date.startsWith(todayStr))
+      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+    const todayOut = entries
+      .filter(e => e.type === 'out' && e.entry_date && e.entry_date.startsWith(todayStr))
+      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+    const totalIn = entries
+      .filter(e => e.type === 'in')
+      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+    const totalOut = entries
+      .filter(e => e.type === 'out')
+      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+    const netCashInHand = totalIn - totalOut;
+
+    res.json({
+      todayIn,
+      todayOut,
+      todayNet: todayIn - todayOut,
+      totalIn,
+      totalOut,
+      netCashInHand
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 17. QUICK DIYA / LIYA (YOU GAVE / YOU GOT) ENTRY
+router.post('/credit/quick-entry', async (req, res) => {
+  const { customer_id, type, amount, notes, due_date, bill_number, payment_mode } = req.body;
+  if (!customer_id || !type || !amount || Number(amount) <= 0) {
+    return res.status(400).json({ error: 'Customer, entry type (gave/got), and positive amount are required' });
+  }
+
+  try {
+    const customer = await db.findById('customers', customer_id);
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+
+    const numAmount = Number(amount);
+    const curDebt = Number(customer.debt_balance) || 0;
+
+    if (type === 'gave') {
+      // You Gave (Maine Diya / Udhar) -> increases debt
+      const newDebt = curDebt + numAmount;
+      await db.update('customers', customer_id, {
+        debt_balance: newDebt,
+        total_spending: (Number(customer.total_spending) || 0) + numAmount,
+        last_purchase: new Date().toISOString()
+      });
+
+      const tx = await db.insert('credit_transactions', {
+        customer_id,
+        credit_amount: numAmount,
+        amount_paid: 0,
+        outstanding_amount: numAmount,
+        credit_date: new Date().toISOString(),
+        due_date: due_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'due',
+        notes: notes || `Udhar: Bill #${bill_number || 'Direct'}`
+      });
+
+      res.status(201).json({ success: true, type: 'gave', new_debt_balance: newDebt, transaction: tx });
+    } else if (type === 'got') {
+      // You Got (Maine Liya / Jama) -> decreases debt
+      const newDebt = Math.max(0, curDebt - numAmount);
+      await db.update('customers', customer_id, {
+        debt_balance: newDebt
+      });
+
+      const payment = await db.insert('credit_payments', {
+        credit_id: null,
+        customer_id,
+        amount: numAmount,
+        payment_method: payment_mode || 'cash',
+        payment_date: new Date().toISOString(),
+        notes: notes || 'Payment Received (Jama)'
+      });
+
+      // Auto-log into Cashbook if received as cash
+      if (!payment_mode || payment_mode === 'cash') {
+        await db.insert('cashbook_entries', {
+          type: 'in',
+          amount: numAmount,
+          category: 'debt_collected',
+          payment_mode: 'cash',
+          notes: `Udhar Collected from ${customer.name}`,
+          entry_date: new Date().toISOString()
+        });
+      }
+
+      res.status(201).json({ success: true, type: 'got', new_debt_balance: newDebt, payment });
+    } else {
+      res.status(400).json({ error: 'Invalid type (must be "gave" or "got")' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

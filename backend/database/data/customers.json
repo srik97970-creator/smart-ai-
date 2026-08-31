@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": "cust_ravi",
+    "name": "Ravi Kumar",
+    "phone": "9012345678",
+    "total_spending": 5450,
+    "debt_balance": 2450,
+    "credit_limit": 10000,
+    "preferred_language": "te",
+    "created_at": "2026-08-31T17:30:31.581Z"
+  },
+  {
+    "id": "cust_srinivas",
+    "name": "Srinivas Rao",
+    "phone": "9848098765",
+    "total_spending": 3200,
+    "debt_balance": 1200,
+    "credit_limit": 5000,
+    "preferred_language": "en",
+    "created_at": "2026-08-31T17:30:31.587Z"
+  }
+]

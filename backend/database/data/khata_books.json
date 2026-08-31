@@ -1,0 +1,23 @@
+[
+  {
+    "id": "kb_main",
+    "name": "🏪 Main Store Khata",
+    "type": "store",
+    "is_default": true,
+    "created_at": "2026-08-31T17:19:19.832Z"
+  },
+  {
+    "id": "kb_wholesale",
+    "name": "📦 Wholesale & Suppliers",
+    "type": "wholesale",
+    "is_default": false,
+    "created_at": "2026-08-31T17:19:19.833Z"
+  },
+  {
+    "id": "kb_personal",
+    "name": "🏠 Personal & Household",
+    "type": "personal",
+    "is_default": false,
+    "created_at": "2026-08-31T17:19:19.833Z"
+  }
+]

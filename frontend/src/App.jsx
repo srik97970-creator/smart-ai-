@@ -169,7 +169,7 @@ export default function App() {
     { id: 'inventory', label: t(lang, 'inventory'), icon: Package },
     { id: 'sales', label: t(lang, 'sales'), icon: ShoppingCart },
     { id: 'customers', label: t(lang, 'customers'), icon: Users },
-    { id: 'udhar', label: 'Smart Udhar', icon: BookOpen },
+    { id: 'udhar', label: t(lang, 'khatabook') || 'Khata Book', icon: BookOpen },
     { id: 'expenses', label: 'Expenses', icon: Receipt },
     { id: 'offers', label: t(lang, 'offers'), icon: Tag },
     { id: 'pamphlet', label: t(lang, 'pamphlet'), icon: FileImage },

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "stx_1",
+    "supplier_id": "sup_balaji",
+    "type": "bill",
+    "amount": 8500,
+    "bill_number": "SBW-901",
+    "payment_method": "credit",
+    "transaction_date": "2026-08-26T17:30:31.602Z",
+    "notes": "Rice 25kg bags (10 units)",
+    "created_at": "2026-08-31T17:30:31.602Z"
+  },
+  {
+    "id": "stx_2",
+    "supplier_id": "sup_laxmi",
+    "type": "bill",
+    "amount": 3200,
+    "bill_number": "LPA-442",
+    "payment_method": "credit",
+    "transaction_date": "2026-08-29T17:30:31.603Z",
+    "notes": "Freedom Sunflower Oil (2 Cartons)",
+    "created_at": "2026-08-31T17:30:31.603Z"
+  }
+]

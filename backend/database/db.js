@@ -52,7 +52,11 @@ const collections = [
   'ai_insights',
   'users',
   'credit_transactions',
-  'credit_payments'
+  'credit_payments',
+  'suppliers',
+  'supplier_transactions',
+  'cashbook_entries',
+  'khata_books'
 ];
 
 collections.forEach(name => {
@@ -60,6 +64,25 @@ collections.forEach(name => {
     writeCollection(name, []);
   }
 });
+
+// Seed default khata books if empty
+try {
+  const booksPath = getFilePath('khata_books');
+  if (fs.existsSync(booksPath)) {
+    const fileData = fs.readFileSync(booksPath, 'utf8');
+    const books = JSON.parse(fileData || '[]');
+    if (books.length === 0) {
+      const defaultBooks = [
+        { id: 'kb_main', name: '🏪 Main Store Khata', type: 'store', is_default: true, created_at: new Date().toISOString() },
+        { id: 'kb_wholesale', name: '📦 Wholesale & Suppliers', type: 'wholesale', is_default: false, created_at: new Date().toISOString() },
+        { id: 'kb_personal', name: '🏠 Personal & Household', type: 'personal', is_default: false, created_at: new Date().toISOString() }
+      ];
+      writeCollection('khata_books', defaultBooks);
+    }
+  }
+} catch (e) {
+  console.error('Error seeding default khata books:', e);
+}
 
 // Seed default admin user in local JSON database if empty
 try {
