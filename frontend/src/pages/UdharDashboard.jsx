@@ -63,6 +63,16 @@ export default function UdharDashboard({ lang: appLang }) {
   const [sortBy, setSortBy] = useState('highest'); // 'highest', 'lowest', 'name'
   const [loading, setLoading] = useState(true);
 
+  // Add Customer Modal State
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    name: '',
+    phone: '',
+    credit_limit: '5000',
+    opening_balance: '0',
+    preferred_language: 'te'
+  });
+
   // Suppliers State
   const [suppliers, setSuppliers] = useState([]);
   const [supplierSearch, setSupplierSearch] = useState('');
@@ -82,6 +92,10 @@ export default function UdharDashboard({ lang: appLang }) {
   const [quickEntryModal, setQuickEntryModal] = useState({ open: false, type: 'gave', partyType: 'customer', targetId: '' });
   const [quickForm, setQuickForm] = useState({ amount: '', notes: '', due_date: '', bill_number: '', payment_mode: 'cash' });
   const [quickError, setQuickError] = useState('');
+  
+  // Inline New Party (Customer/Supplier) creation inside Quick Entry Modal
+  const [isInlineNewParty, setIsInlineNewParty] = useState(false);
+  const [inlinePartyForm, setInlinePartyForm] = useState({ name: '', phone: '', credit_limit: '5000', company_name: '' });
 
   // Customer Ledger Drawer State
   const [selectedLedgerCustomer, setSelectedLedgerCustomer] = useState(null);
@@ -120,9 +134,9 @@ export default function UdharDashboard({ lang: appLang }) {
       youWillGet: "You'll Get",
       youWillPay: "You'll Pay",
       inHandCash: 'Cash In Hand',
-      addCustomer: 'Add Customer',
-      addSupplier: 'Add Supplier',
-      addCash: 'Cash Entry',
+      addCustomer: '+ Add Customer',
+      addSupplier: '+ Add Supplier',
+      addCash: '+ Cash Entry',
       viewLedger: 'View Ledger',
       upiQr: 'UPI QR Code',
       statement: 'Download Statement',
@@ -140,9 +154,9 @@ export default function UdharDashboard({ lang: appLang }) {
       youWillGet: 'రావలసిన బకాయి',
       youWillPay: 'చెల్లించవలసిన మొత్తం',
       inHandCash: 'కౌంటర్ నగదు నిల్వ',
-      addCustomer: 'కస్టమర్‌ను చేర్చండి',
-      addSupplier: 'సప్లయర్‌ను చేర్చండి',
-      addCash: 'నగదు నమోదు',
+      addCustomer: '+ కస్టమర్‌ని చేర్చండి',
+      addSupplier: '+ సప్లయర్‌ని చేర్చండి',
+      addCash: '+ నగదు నమోదు',
       viewLedger: 'ఖాతా చూడండి',
       upiQr: 'యూపీఐ క్యూఆర్',
       statement: 'స్టేట్‌మెంట్ ప్రింట్',
@@ -160,9 +174,9 @@ export default function UdharDashboard({ lang: appLang }) {
       youWillGet: 'कुल लेना है',
       youWillPay: 'कुल देना है',
       inHandCash: 'हाथ में नकद',
-      addCustomer: 'ग्राहक जोड़ें',
-      addSupplier: 'सप्लायर जोड़ें',
-      addCash: 'नकद एंट्री',
+      addCustomer: '+ ग्राहक जोड़ें',
+      addSupplier: '+ सप्लायर जोड़ें',
+      addCash: '+ नकद एंट्री',
       viewLedger: 'खाता देखें',
       upiQr: 'यूपीआई क्यूआर',
       statement: 'स्टेटमेंट डाउनलोड',
@@ -270,6 +284,44 @@ export default function UdharDashboard({ lang: appLang }) {
       .catch(() => alert('Failed to create book'));
   };
 
+  // Add Customer Submit
+  const handleAddCustomerSubmit = (e) => {
+    e.preventDefault();
+    if (!customerForm.name || !customerForm.phone) return alert('Name and phone number are required');
+    const openBal = Number(customerForm.opening_balance) || 0;
+    fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: customerForm.name.trim(),
+        phone: customerForm.phone.trim(),
+        credit_limit: Number(customerForm.credit_limit) || 5000,
+        debt_balance: openBal,
+        preferred_language: customerForm.preferred_language || 'te'
+      })
+    })
+      .then(res => res.json())
+      .then((newCust) => {
+        if (openBal > 0) {
+          fetch('/api/credit/transactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customer_id: newCust.id,
+              credit_amount: openBal,
+              amount_paid: 0,
+              due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              notes: 'Opening Balance (Udhar)'
+            })
+          }).catch(() => {});
+        }
+        setShowAddCustomerModal(false);
+        setCustomerForm({ name: '', phone: '', credit_limit: '5000', opening_balance: '0', preferred_language: 'te' });
+        fetchData();
+      })
+      .catch(err => alert(err.message || 'Failed to add customer'));
+  };
+
   // Add Supplier Submit
   const handleAddSupplierSubmit = (e) => {
     e.preventDefault();
@@ -307,19 +359,68 @@ export default function UdharDashboard({ lang: appLang }) {
   };
 
   // Quick Diya / Liya Universal Submit
-  const handleQuickEntrySubmit = (e) => {
+  const handleQuickEntrySubmit = async (e) => {
     e.preventDefault();
     setQuickError('');
     if (!quickForm.amount || Number(quickForm.amount) <= 0) {
       return setQuickError('Please enter a valid positive amount.');
     }
 
-    if (quickEntryModal.partyType === 'customer') {
-      if (!quickEntryModal.targetId) return setQuickError('Please select a customer.');
+    let targetId = quickEntryModal.targetId;
 
-      // Check credit limit if gave
+    // If adding a new party inline
+    if (isInlineNewParty) {
+      if (!inlinePartyForm.name || !inlinePartyForm.phone) {
+        return setQuickError('Name and phone number are required for the new party.');
+      }
+
+      if (quickEntryModal.partyType === 'customer') {
+        try {
+          const res = await fetch('/api/customers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: inlinePartyForm.name.trim(),
+              phone: inlinePartyForm.phone.trim(),
+              credit_limit: Number(inlinePartyForm.credit_limit) || 5000,
+              debt_balance: 0,
+              preferred_language: 'te'
+            })
+          });
+          const newCust = await res.json();
+          if (!res.ok) throw new Error(newCust.error || 'Failed to create customer');
+          targetId = newCust.id;
+        } catch (err) {
+          return setQuickError(err.message);
+        }
+      } else {
+        try {
+          const res = await fetch('/api/suppliers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: inlinePartyForm.name.trim(),
+              company_name: inlinePartyForm.company_name || '',
+              phone: inlinePartyForm.phone.trim(),
+              balance: 0
+            })
+          });
+          const newSup = await res.json();
+          if (!res.ok) throw new Error(newSup.error || 'Failed to create supplier');
+          targetId = newSup.id;
+        } catch (err) {
+          return setQuickError(err.message);
+        }
+      }
+    }
+
+    if (!targetId) {
+      return setQuickError(`Please select or add a ${quickEntryModal.partyType}.`);
+    }
+
+    if (quickEntryModal.partyType === 'customer') {
       if (quickEntryModal.type === 'gave') {
-        const cust = customers.find(c => c.id === quickEntryModal.targetId);
+        const cust = customers.find(c => c.id === targetId);
         if (cust) {
           const out = Number(cust.debt_balance || 0);
           const limit = Number(cust.credit_limit || 5000);
@@ -334,7 +435,7 @@ export default function UdharDashboard({ lang: appLang }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_id: quickEntryModal.targetId,
+          customer_id: targetId,
           type: quickEntryModal.type,
           amount: quickForm.amount,
           notes: quickForm.notes,
@@ -351,22 +452,22 @@ export default function UdharDashboard({ lang: appLang }) {
         .then(() => {
           setQuickEntryModal({ open: false, type: 'gave', partyType: 'customer', targetId: '' });
           setQuickForm({ amount: '', notes: '', due_date: '', bill_number: '', payment_mode: 'cash' });
+          setIsInlineNewParty(false);
+          setInlinePartyForm({ name: '', phone: '', credit_limit: '5000', company_name: '' });
           fetchData();
-          if (selectedLedgerCustomer && selectedLedgerCustomer.id === quickEntryModal.targetId) {
+          if (selectedLedgerCustomer && selectedLedgerCustomer.id === targetId) {
             handleOpenLedger(selectedLedgerCustomer);
           }
         })
         .catch(err => setQuickError(err.message));
 
     } else if (quickEntryModal.partyType === 'supplier') {
-      if (!quickEntryModal.targetId) return setQuickError('Please select a supplier.');
-
-      const txType = quickEntryModal.type === 'gave' ? 'payment' : 'bill'; // You Gave Money = payment; You Got Goods = bill
+      const txType = quickEntryModal.type === 'gave' ? 'payment' : 'bill';
       fetch('/api/supplier-transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          supplier_id: quickEntryModal.targetId,
+          supplier_id: targetId,
           type: txType,
           amount: quickForm.amount,
           bill_number: quickForm.bill_number,
@@ -383,8 +484,10 @@ export default function UdharDashboard({ lang: appLang }) {
         .then(() => {
           setQuickEntryModal({ open: false, type: 'gave', partyType: 'supplier', targetId: '' });
           setQuickForm({ amount: '', notes: '', due_date: '', bill_number: '', payment_mode: 'cash' });
+          setIsInlineNewParty(false);
+          setInlinePartyForm({ name: '', phone: '', credit_limit: '5000', company_name: '' });
           fetchData();
-          if (selectedSupplier && selectedSupplier.id === quickEntryModal.targetId) {
+          if (selectedSupplier && selectedSupplier.id === targetId) {
             handleOpenSupplierLedger(selectedSupplier);
           }
         })
@@ -525,7 +628,7 @@ export default function UdharDashboard({ lang: appLang }) {
         </div>
       </div>
 
-      {/* Main Tabs (Customers / Suppliers / Cashbook) & Universal Diya/Liya Buttons */}
+      {/* Main Tabs & Universal Diya/Liya Buttons */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b pb-4 dark:border-gray-750">
         {/* Tab Buttons */}
         <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl w-fit border border-gray-200 dark:border-gray-700">
@@ -552,13 +655,19 @@ export default function UdharDashboard({ lang: appLang }) {
         {/* Universal Big Diya (🔴 Gave) and Liya (🟢 Got) Buttons */}
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => setQuickEntryModal({ open: true, type: 'gave', partyType: activeTab === 'suppliers' ? 'supplier' : 'customer', targetId: '' })}
+            onClick={() => {
+              setIsInlineNewParty(false);
+              setQuickEntryModal({ open: true, type: 'gave', partyType: activeTab === 'suppliers' ? 'supplier' : 'customer', targetId: '' });
+            }}
             className="bg-red-600 hover:bg-red-500 text-white font-black px-4 py-2.5 rounded-2xl text-xs transition shadow-lg shadow-red-600/20 flex items-center gap-1.5"
           >
             <ArrowUpRight size={16} /> {t.youGave}
           </button>
           <button
-            onClick={() => setQuickEntryModal({ open: true, type: 'got', partyType: activeTab === 'suppliers' ? 'supplier' : 'customer', targetId: '' })}
+            onClick={() => {
+              setIsInlineNewParty(false);
+              setQuickEntryModal({ open: true, type: 'got', partyType: activeTab === 'suppliers' ? 'supplier' : 'customer', targetId: '' });
+            }}
             className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2.5 rounded-2xl text-xs transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5"
           >
             <ArrowDownLeft size={16} /> {t.youGot}
@@ -621,7 +730,7 @@ export default function UdharDashboard({ lang: appLang }) {
                 />
               </div>
 
-              {/* Filters */}
+              {/* Filters & Add Customer Button */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <select
                   value={filterType}
@@ -642,6 +751,13 @@ export default function UdharDashboard({ lang: appLang }) {
                   <option value="lowest">Lowest Debt First</option>
                   <option value="name">Alphabetical</option>
                 </select>
+
+                <button 
+                  onClick={() => setShowAddCustomerModal(true)}
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition flex items-center gap-1 shadow-sm"
+                >
+                  <UserPlus size={14} /> {t.addCustomer}
+                </button>
 
                 <button 
                   onClick={fetchData}
@@ -669,7 +785,11 @@ export default function UdharDashboard({ lang: appLang }) {
                   {loading ? (
                     <tr><td colSpan="5" className="p-8 text-center text-gray-450 italic">Loading Khata records...</td></tr>
                   ) : filteredCustomers.length === 0 ? (
-                    <tr><td colSpan="5" className="p-8 text-center text-gray-450 italic">No customers found. Click "You Gave" to start recording!</td></tr>
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-gray-450 italic">
+                        No customers found. Click <strong>"{t.addCustomer}"</strong> or <strong>"{t.youGave}"</strong> to add your first customer to the Khata Book!
+                      </td>
+                    </tr>
                   ) : (
                     filteredCustomers.map(c => {
                       const limit = c.credit_limit || 5000;
@@ -791,7 +911,7 @@ export default function UdharDashboard({ lang: appLang }) {
                 onClick={() => setShowAddSupplierModal(true)}
                 className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-xl text-xs transition flex items-center gap-1 shrink-0 shadow-sm"
               >
-                <PlusCircle size={14} /> + New Supplier
+                <PlusCircle size={14} /> {t.addSupplier}
               </button>
             </div>
 
@@ -810,7 +930,7 @@ export default function UdharDashboard({ lang: appLang }) {
                   {suppliers.length === 0 ? (
                     <tr>
                       <td colSpan="5" className="p-8 text-center text-gray-450 italic">
-                        No suppliers recorded yet. Click "+ New Supplier" to create your first vendor Khata.
+                        No suppliers recorded yet. Click "{t.addSupplier}" to create your first vendor Khata.
                       </td>
                     </tr>
                   ) : (
@@ -912,7 +1032,7 @@ export default function UdharDashboard({ lang: appLang }) {
                 onClick={() => setShowAddCashModal(true)}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-xl text-xs transition flex items-center gap-1 shadow-sm"
               >
-                <PlusCircle size={13} /> Add Cash Entry
+                <PlusCircle size={13} /> {t.addCash}
               </button>
             </div>
 
@@ -931,7 +1051,7 @@ export default function UdharDashboard({ lang: appLang }) {
                   {cashEntries.length === 0 ? (
                     <tr>
                       <td colSpan="5" className="p-8 text-center text-gray-450 italic">
-                        No cash register entries recorded yet. Click "Add Cash Entry" to log daily counter cash.
+                        No cash register entries recorded yet. Click "{t.addCash}" to log daily counter cash.
                       </td>
                     </tr>
                   ) : (
@@ -968,6 +1088,104 @@ export default function UdharDashboard({ lang: appLang }) {
       )}
 
       {/* ========================================================================= */}
+      {/* ADD NEW CUSTOMER MODAL                                                   */}
+      {/* ========================================================================= */}
+      {showAddCustomerModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-xs">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-150 dark:border-gray-700 animate-scaleUp">
+            <div className="flex justify-between items-center border-b pb-3 dark:border-gray-700">
+              <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <UserPlus size={18} className="text-red-500" /> {t.addCustomer}
+              </h3>
+              <button onClick={() => setShowAddCustomerModal(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+            </div>
+
+            <form onSubmit={handleAddCustomerSubmit} className="mt-4 flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">Customer Full Name *</label>
+                <input
+                  type="text"
+                  value={customerForm.name}
+                  onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                  placeholder="e.g. Ramesh Kumar, Sunitha Rao"
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl px-3 py-2 text-xs focus:outline-none font-bold"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Phone Number *</label>
+                  <input
+                    type="tel"
+                    value={customerForm.phone}
+                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                    placeholder="e.g. 9848012345"
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl px-3 py-2 text-xs focus:outline-none font-mono font-bold"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Credit Limit (₹)</label>
+                  <input
+                    type="number"
+                    value={customerForm.credit_limit}
+                    onChange={(e) => setCustomerForm({ ...customerForm, credit_limit: e.target.value })}
+                    placeholder="5000"
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl px-3 py-2 text-xs focus:outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Opening Udhar (₹)</label>
+                  <input
+                    type="number"
+                    value={customerForm.opening_balance}
+                    onChange={(e) => setCustomerForm({ ...customerForm, opening_balance: e.target.value })}
+                    placeholder="0.00"
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl px-3 py-2 text-xs focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Preferred Language</label>
+                  <select
+                    value={customerForm.preferred_language}
+                    onChange={(e) => setCustomerForm({ ...customerForm, preferred_language: e.target.value })}
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl px-3 py-2 text-xs focus:outline-none font-bold"
+                  >
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी (Hindi)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t pt-4 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setShowAddCustomerModal(false)}
+                  className="px-4 py-2 border rounded-xl text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow"
+                >
+                  Save Customer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* UNIVERSAL QUICK DIYA / LIYA (GAVE / GOT) MODAL                           */}
       {/* ========================================================================= */}
       {quickEntryModal.open && (
@@ -989,7 +1207,10 @@ export default function UdharDashboard({ lang: appLang }) {
                 </div>
               </div>
               <button 
-                onClick={() => setQuickEntryModal({ open: false, type: 'gave', partyType: 'customer', targetId: '' })}
+                onClick={() => {
+                  setQuickEntryModal({ open: false, type: 'gave', partyType: 'customer', targetId: '' });
+                  setIsInlineNewParty(false);
+                }}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <X size={18} />
@@ -1004,23 +1225,94 @@ export default function UdharDashboard({ lang: appLang }) {
             )}
 
             <form onSubmit={handleQuickEntrySubmit} className="mt-4 flex flex-col gap-4">
-              {/* Select Customer / Supplier */}
+              {/* Select Customer / Supplier OR Add New Customer on the fly */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Select {quickEntryModal.partyType === 'customer' ? 'Customer' : 'Supplier'} *
-                </label>
-                <select
-                  value={quickEntryModal.targetId}
-                  onChange={(e) => setQuickEntryModal(prev => ({ ...prev, targetId: e.target.value }))}
-                  className="bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-red-500 font-bold"
-                  required
-                >
-                  <option value="">-- Choose {quickEntryModal.partyType === 'customer' ? 'Customer' : 'Supplier'} --</option>
-                  {quickEntryModal.partyType === 'customer'
-                    ? customers.map(c => <option key={c.id} value={c.id}>{c.name} ({c.phone}) - Udhar: ₹{c.debt_balance || 0}</option>)
-                    : suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.company_name || s.phone}) - Owe: ₹{s.balance || 0}</option>)
-                  }
-                </select>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-gray-500 uppercase">
+                    {quickEntryModal.partyType === 'customer' ? 'Customer Name' : 'Supplier Name'} *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsInlineNewParty(!isInlineNewParty);
+                      if (!isInlineNewParty) setQuickEntryModal(prev => ({ ...prev, targetId: '' }));
+                    }}
+                    className="text-[11px] text-primary-600 font-extrabold hover:underline"
+                  >
+                    {isInlineNewParty ? '← Choose Existing' : `+ Add New ${quickEntryModal.partyType === 'customer' ? 'Customer' : 'Supplier'}`}
+                  </button>
+                </div>
+
+                {!isInlineNewParty ? (
+                  <select
+                    value={quickEntryModal.targetId}
+                    onChange={(e) => {
+                      if (e.target.value === '__add_new__') {
+                        setIsInlineNewParty(true);
+                      } else {
+                        setQuickEntryModal(prev => ({ ...prev, targetId: e.target.value }));
+                      }
+                    }}
+                    className="bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-red-500 font-bold"
+                    required
+                  >
+                    <option value="">-- Choose {quickEntryModal.partyType === 'customer' ? 'Customer' : 'Supplier'} --</option>
+                    {quickEntryModal.partyType === 'customer'
+                      ? customers.map(c => <option key={c.id} value={c.id}>{c.name} ({c.phone}) - Udhar: ₹{c.debt_balance || 0}</option>)
+                      : suppliers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.company_name || s.phone}) - Owe: ₹{s.balance || 0}</option>)
+                    }
+                    <option value="__add_new__" className="text-primary-600 font-black">
+                      ➕ + Add New {quickEntryModal.partyType === 'customer' ? 'Customer' : 'Supplier'}...
+                    </option>
+                  </select>
+                ) : (
+                  /* Inline New Customer / Supplier Form */
+                  <div className="bg-gray-50 dark:bg-gray-750 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 flex flex-col gap-2.5">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase">
+                        {quickEntryModal.partyType === 'customer' ? 'Customer Name' : 'Contact Person Name'} *
+                      </label>
+                      <input
+                        type="text"
+                        value={inlinePartyForm.name}
+                        onChange={(e) => setInlinePartyForm({ ...inlinePartyForm, name: e.target.value })}
+                        placeholder="e.g. Ramesh Kumar"
+                        className="bg-white dark:bg-gray-700 border border-gray-250 rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none"
+                        required
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">Phone Number *</label>
+                        <input
+                          type="tel"
+                          value={inlinePartyForm.phone}
+                          onChange={(e) => setInlinePartyForm({ ...inlinePartyForm, phone: e.target.value })}
+                          placeholder="e.g. 9848012345"
+                          className="bg-white dark:bg-gray-700 border border-gray-250 rounded-xl px-3 py-1.5 text-xs font-mono font-bold focus:outline-none"
+                          required
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase">
+                          {quickEntryModal.partyType === 'customer' ? 'Credit Limit ₹' : 'Company Name'}
+                        </label>
+                        <input
+                          type="text"
+                          value={quickEntryModal.partyType === 'customer' ? inlinePartyForm.credit_limit : inlinePartyForm.company_name}
+                          onChange={(e) => setInlinePartyForm({ 
+                            ...inlinePartyForm, 
+                            [quickEntryModal.partyType === 'customer' ? 'credit_limit' : 'company_name']: e.target.value 
+                          })}
+                          placeholder={quickEntryModal.partyType === 'customer' ? '5000' : 'e.g. Balaji Traders'}
+                          className="bg-white dark:bg-gray-700 border border-gray-250 rounded-xl px-3 py-1.5 text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Amount Input */}
@@ -1035,7 +1327,6 @@ export default function UdharDashboard({ lang: appLang }) {
                     placeholder="0.00"
                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-250 dark:border-gray-650 rounded-xl pl-8 pr-4 py-3 text-lg font-black font-mono focus:outline-none focus:ring-2 focus:ring-red-500"
                     required
-                    autoFocus
                   />
                 </div>
               </div>
@@ -1095,7 +1386,10 @@ export default function UdharDashboard({ lang: appLang }) {
               <div className="flex justify-end gap-2 border-t pt-4 mt-2 dark:border-gray-700">
                 <button
                   type="button"
-                  onClick={() => setQuickEntryModal({ open: false, type: 'gave', partyType: 'customer', targetId: '' })}
+                  onClick={() => {
+                    setQuickEntryModal({ open: false, type: 'gave', partyType: 'customer', targetId: '' });
+                    setIsInlineNewParty(false);
+                  }}
                   className="px-4 py-2 border border-gray-250 dark:border-gray-600 rounded-xl text-xs font-bold hover:bg-gray-50"
                 >
                   Cancel
