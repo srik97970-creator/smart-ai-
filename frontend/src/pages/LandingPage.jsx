@@ -36,12 +36,12 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
           <Phone size={10} /> Call: 94409 25829
         </a>
         <a
-          href="https://api.whatsapp.com/send?phone=919440925829&text=Hi%20Sri%20Lakshmi%20Stores,%20I%20want%20to%20order%20Surf%20Excel%201%20KG%20at%20Festival%20Offer%20₹126!"
+          href="https://api.whatsapp.com/send?text=%F0%9F%94%A5%20*FESTIVAL%20OFFER%20at%20Sri%20Lakshmi%20Stores*%21%0A%0ASurf%20Excel%201%20KG%20at%20only%20*₹126*%20%28Save%20*₹14*%21%29%0A%0A📍%20Main%20Road%2C%20Gunadala%2C%20Vijayawada%0A📞%20Call%3A%209440925829%20%7C%20UPI%3A%209440925829%40ybl"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-emerald-600 hover:bg-emerald-500 px-2.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 transition shadow"
         >
-          <MessageCircle size={10} /> WhatsApp
+          <MessageCircle size={10} /> Send through WhatsApp
         </a>
       </div>
       {/* Navbar */}
@@ -156,12 +156,12 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
                   <Phone size={10} /> Call Now
                 </a>
                 <a
-                  href="https://api.whatsapp.com/send?phone=919440925829&text=Hi%20Sri%20Lakshmi%20Stores,%20I%20want%20to%20order%20Surf%20Excel%201%20KG%20at%20Festival%20Offer%20₹126!"
+                  href="https://api.whatsapp.com/send?text=%F0%9F%94%A5%20*FESTIVAL%20OFFER%20at%20Sri%20Lakshmi%20Stores*%21%0A%0ASurf%20Excel%201%20KG%20at%20only%20*₹126*%20%28Save%20*₹14*%21%29%0A%0A📍%20Main%20Road%2C%20Gunadala%2C%20Vijayawada%0A📞%20Call%3A%209440925829%20%7C%20UPI%3A%209440925829%40ybl"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow transition"
                 >
-                  <MessageCircle size={10} /> WhatsApp
+                  <MessageCircle size={10} /> Send through WhatsApp
                 </a>
               </div>
             </div>
@@ -207,13 +207,13 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
                 <span>Call: 94409 25829</span>
               </a>
               <a
-                href="https://api.whatsapp.com/send?phone=919440925829&text=Hi%20Sri%20Lakshmi%20Stores,%20I%20want%20to%20order%20Surf%20Excel%201%20KG%20at%20Festival%20Offer%20₹126!"
+                href="https://api.whatsapp.com/send?text=%F0%9F%94%A5%20*FESTIVAL%20OFFER%20at%20Sri%20Lakshmi%20Stores*%21%0A%0A%F0%9F%9B%8D%EF%B8%8F%20*SURF%20EXCEL%201%20KG*%0A%F0%9F%92%B0%20Offer%20Price%3A%20*₹126*%20%28Original%3A%20~~₹140~~%20-%20Save%20*₹14*%21%29%0A%0A%F0%9F%93%8D%20Store%3A%20Main%20Road%2C%20Gunadala%2C%20Vijayawada%0A%F0%9F%93%9E%20Call%3A%209440925829%20%7C%20UPI%3A%209440925829%40ybl"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-emerald-700 hover:bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl transition"
               >
                 <MessageCircle size={18} className="text-white" />
-                <span>Order on WhatsApp</span>
+                <span>Send through WhatsApp</span>
               </a>
             </div>
           </div>
