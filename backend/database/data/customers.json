@@ -40,5 +40,15 @@
     "id": "cus_3953_432",
     "created_at": "2026-08-31T17:51:53.953Z",
     "updated_at": "2026-09-01T05:23:07.445Z"
+  },
+  {
+    "name": "gopichand",
+    "phone": "9121513653",
+    "total_spending": 15,
+    "debt_balance": 15,
+    "last_purchase": "2026-09-01T06:06:10.944Z",
+    "id": "cus_0925_357",
+    "created_at": "2026-09-01T06:06:10.925Z",
+    "updated_at": "2026-09-01T06:06:10.946Z"
   }
 ]

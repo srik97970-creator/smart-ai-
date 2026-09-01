@@ -7,7 +7,10 @@ import {
   ChevronRight, 
   Calculator, 
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Phone,
+  MessageCircle,
+  Tag
 } from 'lucide-react';
 import { t } from '../utils/translations';
 
@@ -19,6 +22,28 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col selection:bg-primary-500 selection:text-white">
+      {/* Live Store Offer Announcement Ribbon */}
+      <div className="bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-xs font-black py-2.5 px-4 text-center flex flex-wrap items-center justify-center gap-2 shadow-inner border-b border-amber-400/40">
+        <span className="flex h-2 w-2 relative">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-300 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-200"></span>
+        </span>
+        <span>🔥 LIVE FESTIVAL OFFER at Sri Lakshmi Stores: Surf Excel 1 KG at only <span className="underline decoration-yellow-300 font-bold">₹126</span> (Save ₹14!)</span>
+        <a 
+          href="tel:9440925829" 
+          className="ml-2 bg-black/20 hover:bg-black/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono border border-white/30 inline-flex items-center gap-1 transition"
+        >
+          <Phone size={10} /> Call: 94409 25829
+        </a>
+        <a
+          href="https://api.whatsapp.com/send?phone=919440925829&text=Hi%20Sri%20Lakshmi%20Stores,%20I%20want%20to%20order%20Surf%20Excel%201%20KG%20at%20Festival%20Offer%20₹126!"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-emerald-600 hover:bg-emerald-500 px-2.5 py-0.5 rounded-full text-[11px] font-bold inline-flex items-center gap-1 transition shadow"
+        >
+          <MessageCircle size={10} /> WhatsApp
+        </a>
+      </div>
       {/* Navbar */}
       <nav className="max-w-7xl mx-auto w-full px-6 py-5 flex items-center justify-between border-b border-slate-800">
         <span className="text-2xl font-extrabold tracking-tight flex items-center gap-2 text-primary-400">
@@ -110,15 +135,86 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
             </div>
 
             {/* Simulated Pamphlet Graphic Preview */}
-            <div className="bg-gradient-to-br from-yellow-500 to-amber-600 text-slate-950 p-4 rounded-xl shadow-lg border border-amber-400 text-center font-bold relative">
-              <span className="absolute top-2 right-2 bg-red-600 text-white text-[8px] px-1 py-0.5 rounded">FESTIVAL OFFER</span>
-              <p className="text-[10px] tracking-widest text-amber-950">SRI LAKSHMI STORES</p>
+            <div className="bg-gradient-to-br from-yellow-500 via-amber-500 to-amber-600 text-slate-950 p-4 rounded-2xl shadow-xl border-2 border-amber-300 text-center font-bold relative">
+              <span className="absolute top-2 right-2 bg-red-600 text-white text-[8px] font-black tracking-wider px-2 py-0.5 rounded-full shadow animate-pulse">
+                FESTIVAL OFFER
+              </span>
+              <p className="text-[10px] tracking-widest text-amber-950 uppercase font-black">SRI LAKSHMI STORES</p>
               <p className="text-base font-extrabold leading-tight mt-1">SURF EXCEL 1 KG</p>
               <div className="flex justify-center items-center gap-2 mt-1">
-                <span className="line-through text-slate-800 text-[10px]">₹140</span>
-                <span className="text-lg font-black text-red-700">₹126</span>
+                <span className="line-through text-slate-800 text-xs font-mono">₹140</span>
+                <span className="text-xl font-black text-red-700 font-mono">₹126</span>
               </div>
-              <p className="text-[9px] text-amber-950 mt-1">Save ₹14 • Call: 98765 43210</p>
+              <p className="text-[10px] text-amber-950 font-black mt-1">
+                Save ₹14 • Call: <a href="tel:9440925829" className="underline hover:text-red-900 font-mono font-bold">94409 25829</a>
+              </p>
+              <div className="flex items-center justify-center gap-2 mt-2 pt-2 border-t border-amber-600/30">
+                <a
+                  href="tel:9440925829"
+                  className="bg-slate-900 hover:bg-black text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow transition"
+                >
+                  <Phone size={10} /> Call Now
+                </a>
+                <a
+                  href="https://api.whatsapp.com/send?phone=919440925829&text=Hi%20Sri%20Lakshmi%20Stores,%20I%20want%20to%20order%20Surf%20Excel%201%20KG%20at%20Festival%20Offer%20₹126!"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-emerald-700 hover:bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 shadow transition"
+                >
+                  <MessageCircle size={10} /> WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Store Offers Spotlight on Front Page */}
+      <section className="max-w-7xl mx-auto w-full px-6 py-6">
+        <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-600 rounded-3xl p-6 sm:p-8 text-slate-950 shadow-2xl border-4 border-yellow-300 relative overflow-hidden">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col gap-2 text-center md:text-left">
+              <div className="flex items-center gap-2 justify-center md:justify-start flex-wrap">
+                <span className="bg-red-600 text-white text-xs font-black uppercase px-3 py-1 rounded-full tracking-wider shadow animate-pulse">
+                  🔥 LIVE FESTIVAL OFFER
+                </span>
+                <span className="bg-white/40 text-slate-950 text-xs font-black uppercase px-3 py-1 rounded-full">
+                  SRI LAKSHMI STORES
+                </span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-950 mt-1 tracking-tight">
+                SURF EXCEL 1 KG
+              </h2>
+              <div className="flex items-center gap-3 justify-center md:justify-start mt-1">
+                <span className="text-xl line-through text-slate-800 font-bold font-mono">₹140</span>
+                <span className="text-4xl font-black text-red-700 font-mono">₹126</span>
+                <span className="bg-green-700 text-white text-xs font-black px-2.5 py-1 rounded-lg shadow-sm">
+                  SAVE ₹14
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-bold text-amber-950 mt-1">
+                📍 Store Address: Main Road, Gunadala, Vijayawada, Andhra Pradesh • UPI: 9440925829@ybl
+              </p>
+            </div>
+
+            {/* Actions: Call & WhatsApp */}
+            <div className="flex flex-col sm:flex-row md:flex-col gap-3 shrink-0 w-full sm:w-auto">
+              <a
+                href="tel:9440925829"
+                className="bg-slate-950 hover:bg-black text-white px-6 py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl transition"
+              >
+                <Phone size={18} className="text-yellow-400" />
+                <span>Call: 94409 25829</span>
+              </a>
+              <a
+                href="https://api.whatsapp.com/send?phone=919440925829&text=Hi%20Sri%20Lakshmi%20Stores,%20I%20want%20to%20order%20Surf%20Excel%201%20KG%20at%20Festival%20Offer%20₹126!"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-emerald-700 hover:bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl transition"
+              >
+                <MessageCircle size={18} className="text-white" />
+                <span>Order on WhatsApp</span>
+              </a>
             </div>
           </div>
         </div>

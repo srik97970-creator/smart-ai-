@@ -123,7 +123,7 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
     const offPrice = selectedOffer.offer_price;
     const saveAmt = orig - offPrice;
     const shop = shopInfo.shop_name || 'Sri Lakshmi Stores';
-    const phone = shopInfo.phone || '9876543210';
+    const phone = shopInfo.phone || '9440925829';
     const addr = shopInfo.address || 'Visakhapatnam';
 
     let whatsapp = '';
@@ -412,7 +412,7 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
                   <div className="border-t border-dashed border-current/35 pt-4 flex flex-col gap-1">
                     <p className="text-[10px] font-bold tracking-wider">{shopInfo.shop_name || 'Sri Lakshmi Stores'}</p>
                     <p className="text-[8px] opacity-75 leading-tight">{shopInfo.address || 'Address Area'}</p>
-                    <p className="text-[9px] font-bold mt-1">📞 Contact: {shopInfo.phone || '9876543210'}</p>
+                    <p className="text-[9px] font-bold mt-1">📞 Contact: {shopInfo.phone || '9440925829'}</p>
                     <p className="text-[8px] font-mono opacity-60 mt-1 uppercase tracking-widest">{validityText}</p>
                   </div>
                 </div>
