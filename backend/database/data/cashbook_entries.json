@@ -38,5 +38,35 @@
     "notes": "Tea & shop cleaning supplies",
     "entry_date": "2026-08-31T17:30:31.627Z",
     "created_at": "2026-08-31T17:30:31.627Z"
+  },
+  {
+    "type": "in",
+    "amount": 1200,
+    "category": "debt_collected",
+    "payment_mode": "cash",
+    "notes": "Udhar Collected from Srinivas Rao",
+    "entry_date": "2026-08-31T17:43:09.794Z",
+    "id": "cas_9794_999",
+    "created_at": "2026-08-31T17:43:09.794Z"
+  },
+  {
+    "type": "in",
+    "amount": 2450,
+    "category": "debt_collected",
+    "payment_mode": "cash",
+    "notes": "Udhar Collected from Ravi Kumar",
+    "entry_date": "2026-08-31T17:43:34.071Z",
+    "id": "cas_4071_263",
+    "created_at": "2026-08-31T17:43:34.071Z"
+  },
+  {
+    "type": "in",
+    "amount": 250,
+    "category": "debt_collected",
+    "payment_mode": "cash",
+    "notes": "Udhar Collected from pavansai",
+    "entry_date": "2026-08-31T17:43:51.728Z",
+    "id": "cas_1728_320",
+    "created_at": "2026-08-31T17:43:51.728Z"
   }
 ]

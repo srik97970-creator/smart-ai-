@@ -4,19 +4,41 @@
     "name": "Ravi Kumar",
     "phone": "9012345678",
     "total_spending": 5450,
-    "debt_balance": 2450,
+    "debt_balance": 0,
     "credit_limit": 10000,
     "preferred_language": "te",
-    "created_at": "2026-08-31T17:30:31.581Z"
+    "created_at": "2026-08-31T17:30:31.581Z",
+    "updated_at": "2026-08-31T17:43:34.065Z"
   },
   {
     "id": "cust_srinivas",
     "name": "Srinivas Rao",
     "phone": "9848098765",
     "total_spending": 3200,
-    "debt_balance": 1200,
+    "debt_balance": 0,
     "credit_limit": 5000,
     "preferred_language": "en",
-    "created_at": "2026-08-31T17:30:31.587Z"
+    "created_at": "2026-08-31T17:30:31.587Z",
+    "updated_at": "2026-08-31T17:43:09.789Z"
+  },
+  {
+    "name": "pavansai",
+    "phone": "9440908343",
+    "total_spending": 87683,
+    "debt_balance": 87433,
+    "last_purchase": "2026-09-01T05:25:47.325Z",
+    "id": "cus_5450_092",
+    "created_at": "2026-08-31T17:40:55.450Z",
+    "updated_at": "2026-09-01T05:25:47.326Z"
+  },
+  {
+    "name": "rithwik",
+    "phone": "7093747140",
+    "total_spending": 500,
+    "debt_balance": 0,
+    "last_purchase": "2026-08-31T17:51:53.969Z",
+    "id": "cus_3953_432",
+    "created_at": "2026-08-31T17:51:53.953Z",
+    "updated_at": "2026-09-01T05:23:07.445Z"
   }
 ]

@@ -119,7 +119,7 @@ export default function UdharDashboard({ lang: appLang }) {
   const [copied, setCopied] = useState(false);
 
   // Shop Profile for Header
-  const [shopInfo, setShopInfo] = useState({ shop_name: 'SmartShop Store', phone: '9999999999', upi_id: 'smartshop@upi' });
+  const [shopInfo, setShopInfo] = useState({ shop_name: 'Sri Lakshmi Stores', phone: '9440925829', upi_id: '9440925829@ybl' });
 
   // Dictionary for Khata Book Terms
   const khataText = {
@@ -524,12 +524,12 @@ export default function UdharDashboard({ lang: appLang }) {
     const storeName = shopInfo.shop_name || 'Sri Lakshmi Stores';
     
     if (reminderLang === 'te') {
-      return `🏪 *${storeName}*\n\nనమస్కారం ${customer.name} గారు,\n\nమీ ఖాతాలో బకాయి మొత్తం: *₹${balance.toLocaleString('en-IN')}*.\n\nదయచేసి ఈ మొత్తాన్ని ${formattedDue} నాటికి చెల్లించి సహకరించగలరు.\n\nUPI ద్వారా చెల్లించడానికి UPI ID: ${shopInfo.upi_id || '9999999999@upi'}\n\nధన్యవాదాలు!`;
+      return `🏪 *${storeName}*\n\nనమస్కారం ${customer.name} గారు,\n\nమీ ఖాతాలో బకాయి మొత్తం: *₹${balance.toLocaleString('en-IN')}*.\n\nదయచేసి ఈ మొత్తాన్ని ${formattedDue} నాటికి చెల్లించి సహకరించగలరు.\n\nUPI ద్వారా చెల్లించడానికి UPI ID: ${shopInfo.upi_id || '9440925829@ybl'}\n\nధన్యవాదాలు!`;
     }
     if (reminderLang === 'hi') {
-      return `🏪 *${storeName}*\n\nनमस्ते ${customer.name},\n\nआपकी लंबित उधार राशि: *₹${balance.toLocaleString('en-IN')}* है।\n\nकृपया इस राशि का भुगतान ${formattedDue} तक करने का कष्ट करें।\n\nUPI द्वारा भुगतान के लिए UPI ID: ${shopInfo.upi_id || '9999999999@upi'}\n\nधन्यवाद!`;
+      return `🏪 *${storeName}*\n\nनमस्ते ${customer.name},\n\nआपकी लंबित उधार राशि: *₹${balance.toLocaleString('en-IN')}* है।\n\nकृपया इस राशि का भुगतान ${formattedDue} तक करने का कष्ट करें।\n\nUPI द्वारा भुगतान के लिए UPI ID: ${shopInfo.upi_id || '9440925829@ybl'}\n\nधन्यवाद!`;
     }
-    return `🏪 *${storeName}*\n\nHello ${customer.name},\n\nThis is a polite reminder that your pending outstanding Udhar balance is: *₹${balance.toLocaleString('en-IN')}*.\n\nPlease clear the pending amount by ${formattedDue}.\n\nYou can also pay via UPI to: ${shopInfo.upi_id || '9999999999@upi'}\n\nThank you for shopping with us!`;
+    return `🏪 *${storeName}*\n\nHello ${customer.name},\n\nThis is a polite reminder that your pending outstanding Udhar balance is: *₹${balance.toLocaleString('en-IN')}*.\n\nPlease clear the pending amount by ${formattedDue}.\n\nYou can also pay via UPI to: ${shopInfo.upi_id || '9440925829@ybl'}\n\nThank you for shopping with us!`;
   };
 
   const handleCopyReminder = (text) => {
@@ -1730,7 +1730,7 @@ export default function UdharDashboard({ lang: appLang }) {
               {/* Dynamic QR Code Image using UPI standard link */}
               <div className="p-3 bg-white rounded-2xl border-2 border-purple-500 shadow-md mt-4">
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${shopInfo.upi_id || 'smartshop@upi'}&pn=${encodeURIComponent(shopInfo.shop_name || 'SmartShop')}&am=${qrCustomer.debt_balance || 0}&cu=INR`)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${shopInfo.upi_id || '9440925829@ybl'}&pn=${encodeURIComponent(shopInfo.shop_name || 'Sri Lakshmi Stores')}&am=${qrCustomer.debt_balance || 0}&cu=INR`)}`}
                   alt="UPI QR Code" 
                   className="w-44 h-44 rounded-lg"
                 />
@@ -1740,7 +1740,7 @@ export default function UdharDashboard({ lang: appLang }) {
                 Scan with Google Pay, PhonePe, Paytm, BHIM, or any UPI app
               </p>
               <p className="text-[10px] font-mono text-purple-600 dark:text-purple-400 mt-1">
-                UPI ID: {shopInfo.upi_id || 'smartshop@upi'}
+                UPI ID: {shopInfo.upi_id || '9440925829@ybl'}
               </p>
             </div>
 
@@ -1779,9 +1779,9 @@ export default function UdharDashboard({ lang: appLang }) {
             <div ref={printRef} className="p-4 flex flex-col gap-5">
               <div className="flex justify-between items-start border-b-2 border-gray-900 pb-4">
                 <div>
-                  <h2 className="text-2xl font-black">{shopInfo.shop_name || 'SmartShop AI Store'}</h2>
+                  <h2 className="text-2xl font-black">{shopInfo.shop_name || 'Sri Lakshmi Stores'}</h2>
                   <p className="text-xs text-gray-500">{shopInfo.address || 'Retail Store'}</p>
-                  <p className="text-xs text-gray-500 font-mono">Phone: {shopInfo.phone || '9999999999'} | UPI: {shopInfo.upi_id || 'smartshop@upi'}</p>
+                  <p className="text-xs text-gray-500 font-mono">Phone: {shopInfo.phone || '9440925829'} | UPI: {shopInfo.upi_id || '9440925829@ybl'}</p>
                 </div>
                 <div className="text-right">
                   <span className="text-xs font-black uppercase bg-gray-100 px-3 py-1 rounded-full border">

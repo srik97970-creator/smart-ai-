@@ -24,6 +24,7 @@ export default function Settings({ lang, shopInfo, setShopInfo }) {
         shop_name: shopInfo.shop_name || '',
         owner_name: shopInfo.owner_name || '',
         phone: shopInfo.phone || '',
+        upi_id: shopInfo.upi_id || '9440925829@ybl',
         address: shopInfo.address || '',
         logo_url: shopInfo.logo_url || '',
         designer_cost: shopInfo.designer_cost || 500
@@ -168,11 +169,25 @@ export default function Settings({ lang, shopInfo, setShopInfo }) {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                placeholder="e.g. 9876543210"
+                placeholder="e.g. 9440925829"
                 className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-650 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
-            
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">Store UPI ID (For QR & Reminders)</label>
+              <input 
+                type="text"
+                name="upi_id"
+                value={formData.upi_id}
+                onChange={handleInputChange}
+                placeholder="e.g. 9440925829@ybl"
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-650 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-bold text-gray-500 uppercase">Estimated Designer Fee per Flyer (₹)</label>
               <input 
@@ -184,18 +199,18 @@ export default function Settings({ lang, shopInfo, setShopInfo }) {
                 className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-650 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
-          </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-gray-500 uppercase">Shop Logo URL</label>
-            <input 
-              type="text"
-              name="logo_url"
-              value={formData.logo_url}
-              onChange={handleInputChange}
-              placeholder="e.g. https://images.unsplash.com/photo..."
-              className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-650 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">Shop Logo URL</label>
+              <input 
+                type="text"
+                name="logo_url"
+                value={formData.logo_url}
+                onChange={handleInputChange}
+                placeholder="e.g. https://images.unsplash.com/photo..."
+                className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-650 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1">

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS shops (
     shop_name TEXT NOT NULL,
     owner_name TEXT,
     phone TEXT,
+    upi_id TEXT,
     address TEXT,
     logo_url TEXT,
     designer_cost INTEGER DEFAULT 500,
