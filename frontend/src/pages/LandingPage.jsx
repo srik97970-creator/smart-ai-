@@ -10,15 +10,160 @@ import {
   AlertCircle,
   Phone,
   MessageCircle,
-  Tag
+  Tag,
+  Copy,
+  Check,
+  History,
+  RotateCcw,
+  Percent
 } from 'lucide-react';
 import { t } from '../utils/translations';
 
 export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
-  const [designerCost, setDesignerCost] = useState(500);
-  const [pamphletsCount, setPamphletsCount] = useState(10);
+  // Real Calculator State
+  const [calcDisplay, setCalcDisplay] = useState('0');
+  const [calcEquation, setCalcEquation] = useState('');
+  const [calcPrevValue, setCalcPrevValue] = useState(null);
+  const [calcOperator, setCalcOperator] = useState(null);
+  const [calcWaitingForOperand, setCalcWaitingForOperand] = useState(false);
+  const [calcHistory, setCalcHistory] = useState([
+    { eq: '120 × 3 + 50', res: '410', time: 'Just now' },
+    { eq: '2,450 - 550', res: '1,900', time: '1 min ago' }
+  ]);
+  const [calcCopied, setCalcCopied] = useState(false);
 
-  const estimatedSavings = designerCost * pamphletsCount;
+  const handleCalcNumber = (digit) => {
+    if (calcWaitingForOperand) {
+      setCalcDisplay(String(digit));
+      setCalcWaitingForOperand(false);
+    } else {
+      setCalcDisplay(calcDisplay === '0' ? String(digit) : calcDisplay + digit);
+    }
+  };
+
+  const handleCalcDecimal = () => {
+    if (calcWaitingForOperand) {
+      setCalcDisplay('0.');
+      setCalcWaitingForOperand(false);
+      return;
+    }
+    if (!calcDisplay.includes('.')) {
+      setCalcDisplay(calcDisplay + '.');
+    }
+  };
+
+  const handleCalcOperator = (nextOperator) => {
+    const inputValue = parseFloat(calcDisplay);
+
+    if (calcPrevValue == null) {
+      setCalcPrevValue(inputValue);
+      setCalcEquation(`${calcDisplay} ${nextOperator}`);
+    } else if (calcOperator) {
+      const currentValue = calcPrevValue || 0;
+      const result = calculate(currentValue, inputValue, calcOperator);
+      setCalcDisplay(String(result));
+      setCalcPrevValue(result);
+      setCalcEquation(`${result} ${nextOperator}`);
+    }
+
+    setCalcWaitingForOperand(true);
+    setCalcOperator(nextOperator);
+  };
+
+  const calculate = (prev, current, op) => {
+    switch (op) {
+      case '+': return prev + current;
+      case '-': return prev - current;
+      case '×': return prev * current;
+      case '÷': return current !== 0 ? Math.round((prev / current) * 100) / 100 : 'Error';
+      default: return current;
+    }
+  };
+
+  const handleCalcEquals = () => {
+    const inputValue = parseFloat(calcDisplay);
+
+    if (calcPrevValue != null && calcOperator) {
+      const result = calculate(calcPrevValue, inputValue, calcOperator);
+      const eqStr = `${calcPrevValue} ${calcOperator} ${inputValue}`;
+      setCalcDisplay(String(result));
+      setCalcEquation(`${eqStr} =`);
+      setCalcHistory(prev => [
+        { eq: eqStr, res: String(result), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+        ...prev.slice(0, 7)
+      ]);
+      setCalcPrevValue(null);
+      setCalcOperator(null);
+      setCalcWaitingForOperand(true);
+    }
+  };
+
+  const handleCalcClear = () => {
+    setCalcDisplay('0');
+  };
+
+  const handleCalcAllClear = () => {
+    setCalcDisplay('0');
+    setCalcEquation('');
+    setCalcPrevValue(null);
+    setCalcOperator(null);
+    setCalcWaitingForOperand(false);
+  };
+
+  const handleCalcBackspace = () => {
+    if (calcWaitingForOperand) return;
+    if (calcDisplay.length > 1) {
+      setCalcDisplay(calcDisplay.slice(0, -1));
+    } else {
+      setCalcDisplay('0');
+    }
+  };
+
+  const handleCalcToggleSign = () => {
+    const val = parseFloat(calcDisplay);
+    if (val !== 0) {
+      setCalcDisplay(String(-val));
+    }
+  };
+
+  const handleCalcPercent = () => {
+    const val = parseFloat(calcDisplay);
+    setCalcDisplay(String(val / 100));
+  };
+
+  const handleCalcAddGst = (rate) => {
+    const val = parseFloat(calcDisplay) || 0;
+    const gstAmt = (val * rate) / 100;
+    const total = Math.round((val + gstAmt) * 100) / 100;
+    const eqStr = `${val} + ${rate}% GST`;
+    setCalcDisplay(String(total));
+    setCalcEquation(`${eqStr} =`);
+    setCalcHistory(prev => [
+      { eq: eqStr, res: String(total), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+      ...prev.slice(0, 7)
+    ]);
+    setCalcWaitingForOperand(true);
+  };
+
+  const handleCalcDiscount = (rate) => {
+    const val = parseFloat(calcDisplay) || 0;
+    const discAmt = (val * rate) / 100;
+    const total = Math.round((val - discAmt) * 100) / 100;
+    const eqStr = `${val} - ${rate}% OFF`;
+    setCalcDisplay(String(total));
+    setCalcEquation(`${eqStr} =`);
+    setCalcHistory(prev => [
+      { eq: eqStr, res: String(total), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+      ...prev.slice(0, 7)
+    ]);
+    setCalcWaitingForOperand(true);
+  };
+
+  const handleCalcCopy = () => {
+    navigator.clipboard.writeText(calcDisplay);
+    setCalcCopied(true);
+    setTimeout(() => setCalcCopied(false), 2000);
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col selection:bg-primary-500 selection:text-white">
@@ -90,10 +235,10 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
               Get Started Now <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <a 
-              href="#saver" 
+              href="#calculator" 
               className="w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-base font-bold transition flex items-center justify-center gap-2"
             >
-              <Calculator size={18} /> Calculate Savings
+              <Calculator size={18} /> Digital Calculator
             </a>
           </div>
         </div>
@@ -273,62 +418,262 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
         </div>
       </section>
 
-      {/* Interactive Publicity Cost Calculator */}
-      <section id="saver" className="bg-slate-950 py-20 border-t border-slate-800">
-        <div className="max-w-4xl mx-auto px-6 bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 p-8 sm:p-12 rounded-3xl shadow-xl flex flex-col gap-8">
+      {/* Real Interactive Digital Retail Calculator */}
+      <section id="calculator" className="bg-slate-950 py-20 border-t border-slate-800">
+        <div className="max-w-5xl mx-auto px-6 flex flex-col gap-10">
           <div className="text-center flex flex-col gap-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold flex items-center justify-center gap-2">
-              <Calculator className="text-primary-500" /> Publicity Cost Saver Calculator
+            <span className="text-xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full self-center border border-emerald-500/20">
+              ⚡ Live Shopkeeper Tool
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black flex items-center justify-center gap-2.5 text-white">
+              <Calculator className="text-emerald-400" size={32} /> Digital Retail Calculator
             </h2>
-            <p className="text-slate-400 text-sm max-w-md mx-auto">
-              SmartShop AI lets you generate design pamphlets yourself. See how much money you can save compared to hiring external designers.
+            <p className="text-slate-400 text-sm max-w-lg mx-auto">
+              Fast counter calculations, instant GST additions (+5%, +12%, +18%), quick discount rates, and interactive history tape.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 items-center mt-4">
-            <div className="flex flex-col gap-6">
-              {/* Slider 1: Designer Fee */}
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between font-bold text-sm">
-                  <span className="text-slate-300">Designer Fee per Flyer:</span>
-                  <span className="text-primary-400">₹{designerCost}</span>
+          <div className="grid lg:grid-cols-12 gap-8 items-start">
+            {/* The Real Calculator Physical Device */}
+            <div className="lg:col-span-7 bg-slate-900 border-2 border-slate-700/80 rounded-3xl p-6 sm:p-7 shadow-2xl shadow-black/60 flex flex-col gap-5">
+              
+              {/* Screen / Display */}
+              <div className="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between shadow-inner relative overflow-hidden">
+                <div className="flex justify-between items-center text-xs text-slate-400 min-h-[20px] font-mono">
+                  <span>{calcEquation}</span>
+                  <button
+                    onClick={handleCalcCopy}
+                    className="text-[11px] font-bold text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800/80 hover:bg-slate-800 px-2 py-0.5 rounded-md transition"
+                    title="Copy result"
+                  >
+                    {calcCopied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                    <span>{calcCopied ? 'Copied' : 'Copy'}</span>
+                  </button>
                 </div>
-                <input 
-                  type="range" 
-                  min="100" 
-                  max="2000" 
-                  step="50"
-                  value={designerCost} 
-                  onChange={(e) => setDesignerCost(Number(e.target.value))}
-                  className="w-full accent-primary-500 h-2 bg-slate-700 rounded-lg cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-500">Configure what an external designer usually charges you.</span>
+                <div className="text-right text-3xl sm:text-4xl font-black font-mono text-white tracking-tight mt-2 overflow-x-auto select-all">
+                  {calcDisplay}
+                </div>
               </div>
 
-              {/* Slider 2: Flyer Count */}
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between font-bold text-sm">
-                  <span className="text-slate-300">Pamphlets needed per month:</span>
-                  <span className="text-primary-400">{pamphletsCount} flyers</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="1" 
-                  max="50" 
-                  value={pamphletsCount} 
-                  onChange={(e) => setPamphletsCount(Number(e.target.value))}
-                  className="w-full accent-primary-500 h-2 bg-slate-700 rounded-lg cursor-pointer"
-                />
+              {/* Quick Business GST & Discount Keys */}
+              <div className="grid grid-cols-6 gap-2">
+                {[
+                  { label: '+5% GST', fn: () => handleCalcAddGst(5), color: 'bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border-emerald-800/50' },
+                  { label: '+12% GST', fn: () => handleCalcAddGst(12), color: 'bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border-emerald-800/50' },
+                  { label: '+18% GST', fn: () => handleCalcAddGst(18), color: 'bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border-emerald-800/50' },
+                  { label: '-10% OFF', fn: () => handleCalcDiscount(10), color: 'bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border-amber-800/50' },
+                  { label: '-20% OFF', fn: () => handleCalcDiscount(20), color: 'bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border-amber-800/50' },
+                  { label: '-50% OFF', fn: () => handleCalcDiscount(50), color: 'bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border-amber-800/50' }
+                ].map((btn, idx) => (
+                  <button
+                    key={idx}
+                    onClick={btn.fn}
+                    className={`py-2 px-1 rounded-xl text-[10px] sm:text-xs font-extrabold border transition shadow-sm ${btn.color}`}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Keypad Grid */}
+              <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
+                {/* Row 1 */}
+                <button 
+                  onClick={handleCalcAllClear} 
+                  className="bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-800/60 font-black py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base transition shadow-sm active:scale-95"
+                >
+                  AC
+                </button>
+                <button 
+                  onClick={handleCalcClear} 
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base transition shadow-sm active:scale-95"
+                >
+                  C
+                </button>
+                <button 
+                  onClick={handleCalcBackspace} 
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base transition shadow-sm active:scale-95 flex items-center justify-center"
+                  title="Backspace"
+                >
+                  ⌫
+                </button>
+                <button 
+                  onClick={() => handleCalcOperator('÷')} 
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-black py-3.5 sm:py-4 rounded-2xl text-lg sm:text-xl transition shadow-md shadow-amber-600/20 active:scale-95"
+                >
+                  ÷
+                </button>
+
+                {/* Row 2 */}
+                <button 
+                  onClick={() => handleCalcNumber(7)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  7
+                </button>
+                <button 
+                  onClick={() => handleCalcNumber(8)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  8
+                </button>
+                <button 
+                  onClick={() => handleCalcNumber(9)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  9
+                </button>
+                <button 
+                  onClick={() => handleCalcOperator('×')} 
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-black py-3.5 sm:py-4 rounded-2xl text-lg sm:text-xl transition shadow-md shadow-amber-600/20 active:scale-95"
+                >
+                  ×
+                </button>
+
+                {/* Row 3 */}
+                <button 
+                  onClick={() => handleCalcNumber(4)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  4
+                </button>
+                <button 
+                  onClick={() => handleCalcNumber(5)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  5
+                </button>
+                <button 
+                  onClick={() => handleCalcNumber(6)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  6
+                </button>
+                <button 
+                  onClick={() => handleCalcOperator('-')} 
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-black py-3.5 sm:py-4 rounded-2xl text-lg sm:text-xl transition shadow-md shadow-amber-600/20 active:scale-95"
+                >
+                  -
+                </button>
+
+                {/* Row 4 */}
+                <button 
+                  onClick={() => handleCalcNumber(1)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  1
+                </button>
+                <button 
+                  onClick={() => handleCalcNumber(2)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  2
+                </button>
+                <button 
+                  onClick={() => handleCalcNumber(3)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  3
+                </button>
+                <button 
+                  onClick={() => handleCalcOperator('+')} 
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-black py-3.5 sm:py-4 rounded-2xl text-lg sm:text-xl transition shadow-md shadow-amber-600/20 active:scale-95"
+                >
+                  +
+                </button>
+
+                {/* Row 5 */}
+                <button 
+                  onClick={handleCalcToggleSign} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-slate-300 border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base transition shadow-sm active:scale-95"
+                >
+                  +/-
+                </button>
+                <button 
+                  onClick={() => handleCalcNumber(0)} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  0
+                </button>
+                <button 
+                  onClick={handleCalcDecimal} 
+                  className="bg-slate-800/90 hover:bg-slate-750 text-white border border-slate-700/80 font-bold py-3.5 sm:py-4 rounded-2xl text-base sm:text-lg transition shadow-sm active:scale-95"
+                >
+                  .
+                </button>
+                <button 
+                  onClick={handleCalcEquals} 
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-3.5 sm:py-4 rounded-2xl text-xl transition shadow-lg shadow-emerald-600/30 active:scale-95"
+                >
+                  =
+                </button>
               </div>
             </div>
 
-            {/* Savings Display */}
-            <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-700/80 flex flex-col items-center justify-center text-center">
-              <p className="text-xs uppercase font-extrabold tracking-widest text-slate-400">Estimated Monthly Savings</p>
-              <p className="text-4xl sm:text-5xl font-black text-primary-400 mt-2">₹{estimatedSavings.toLocaleString('en-IN')}</p>
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-4 leading-normal">
-                <CheckCircle size={12} className="text-primary-500 shrink-0" />
-                <span>Estimated saving compared with creating this promotional design externally.</span>
+            {/* Right Column: History Tape & Retail Shortcuts */}
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              {/* History Tape Card */}
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col gap-4">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                  <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
+                    <History size={16} className="text-emerald-400" /> Calculation History
+                  </h3>
+                  {calcHistory.length > 0 && (
+                    <button
+                      onClick={() => setCalcHistory([])}
+                      className="text-[11px] text-slate-400 hover:text-red-400 font-bold transition"
+                    >
+                      Clear Log
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2.5 max-h-56 overflow-y-auto pr-1">
+                  {calcHistory.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic py-6 text-center">No calculations recorded yet.</p>
+                  ) : (
+                    calcHistory.map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          setCalcDisplay(item.res);
+                          setCalcEquation(item.eq);
+                        }}
+                        className="bg-slate-950/80 hover:bg-slate-800/80 border border-slate-800 p-3 rounded-2xl flex items-center justify-between text-xs cursor-pointer transition group"
+                        title="Click to load into calculator"
+                      >
+                        <div>
+                          <p className="font-mono text-slate-400 text-[11px]">{item.eq}</p>
+                          <p className="text-[9px] text-slate-600 mt-0.5">{item.time}</p>
+                        </div>
+                        <p className="font-mono font-black text-sm text-emerald-400 group-hover:underline">
+                          = {item.res}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Retail Quick Tips Card */}
+              <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 flex flex-col gap-3">
+                <h4 className="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  🏪 Retail Billing Shortcuts
+                </h4>
+                <ul className="text-xs text-slate-400 flex flex-col gap-2 leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold">•</span>
+                    <span>Use <strong>+GST buttons</strong> to instantly add 5%, 12%, or 18% tax to any wholesale product price.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-400 font-bold">•</span>
+                    <span>Use <strong>-OFF buttons</strong> to quickly compute festival discounts on billing totals.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 font-bold">•</span>
+                    <span>Click on any line in the <strong>History Tape</strong> to reload that calculated value anytime.</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
