@@ -15,7 +15,17 @@ import {
   Check,
   History,
   RotateCcw,
-  Percent
+  Percent,
+  User,
+  ShoppingBag,
+  CreditCard,
+  Banknote,
+  Scale,
+  Bell,
+  ArrowRight,
+  CheckCircle2,
+  XCircle,
+  BookOpen
 } from 'lucide-react';
 import { t } from '../utils/translations';
 
@@ -677,6 +687,211 @@ export default function LandingPage({ onEnterDemo, lang, setLang, shopInfo }) {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Notebook vs Digital Khata & 6-Step Workflow Section */}
+      <section className="bg-slate-900 py-20 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-16">
+          
+          {/* Section Header */}
+          <div className="text-center flex flex-col items-center gap-3 max-w-3xl mx-auto">
+            <span className="text-xs font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3.5 py-1 rounded-full border border-amber-500/20 flex items-center gap-1.5 shadow-sm">
+              <BookOpen size={14} /> Paper Notebook vs Digital Khata
+            </span>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">
+              Stop Losing Money in <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-amber-300 to-emerald-400">Old Paper Notebooks</span>
+            </h2>
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+              When shop owners scribble credit in physical diaries, pages get torn, handwriting is illegible, and payments slip through the cracks. Here is how SmartShop AI solves every single credit problem.
+            </p>
+          </div>
+
+          {/* Problem Checklist: The 7 Things Shopkeepers Forget in Notebooks */}
+          <div className="grid md:grid-cols-2 gap-8 items-start bg-slate-950/90 border border-slate-800 p-6 sm:p-10 rounded-3xl shadow-2xl">
+            {/* The Notebook Problem */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                <h3 className="text-lg sm:text-xl font-black text-red-400 uppercase tracking-wide">
+                  ❌ What You Forget in Paper Notebooks:
+                </h3>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {[
+                  { q: "Who took the credit?", desc: "Customer name written unclearly or without phone number." },
+                  { q: "How much did they take?", desc: "Scribbled numbers smudged or difficult to read weeks later." },
+                  { q: "When did they take it?", desc: "No exact date or timestamp recorded during busy hours." },
+                  { q: "How much has already been paid?", desc: "Partial cash payments scratched out messily." },
+                  { q: "How much is remaining?", desc: "Requires manual addition prone to costly human error." },
+                  { q: "When should they pay?", desc: "No promised due date noted; shopkeeper feels awkward asking." },
+                  { q: "Which customers have overdue payments?", desc: "Must manually flip through dozens of dusty pages every night." }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3 bg-red-950/20 border border-red-900/30 p-3 rounded-xl">
+                    <XCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-200">{item.q}</p>
+                      <p className="text-xs text-slate-400">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* The SmartShop AI Solution */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
+                <h3 className="text-lg sm:text-xl font-black text-emerald-400 uppercase tracking-wide">
+                  ✅ How SmartShop AI Solves It:
+                </h3>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {[
+                  { a: "100% Verified Customer Profiles", sol: "Name, phone number, and custom credit limits saved digitally." },
+                  { a: "Exact Digital Itemized Records", sol: "Every single rupee recorded with exact products or bill reference." },
+                  { a: "Automatic Timestamp & Date", sol: "Exact hour and date auto-recorded; never disputable." },
+                  { a: "Instant Cash & UPI Payment Logs", sol: "Partial payments log instantly via Cash or UPI (9440925829@ybl)." },
+                  { a: "Automated Real-Time Live Balance", sol: "Smart ledger subtracts payments instantly with zero math mistakes." },
+                  { a: "Promised Due Dates & Reminders", sol: "Set promised payback dates with automatic countdown alerts." },
+                  { a: "1-Click Overdue Customer Filter", sol: "Instant dashboard filter showing every pending balance needing attention." }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-3 bg-emerald-950/20 border border-emerald-900/30 p-3 rounded-xl">
+                    <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-emerald-300">{item.a}</p>
+                      <p className="text-xs text-slate-400">{item.sol}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* The Complete 6-Step Workflow Pipeline: Customer → Purchase → Credit → Payment → Balance → Reminder */}
+          <div className="flex flex-col gap-8">
+            <div className="text-center flex flex-col gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-primary-400">
+                The Complete Digital Khata Lifecycle
+              </span>
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white">
+                Customer → Purchase → Credit → Payment → Balance → Reminder
+              </h3>
+              <p className="text-slate-400 text-xs sm:text-sm max-w-xl mx-auto">
+                Follow this seamless 6-step cycle to recover udhar 3x faster without awkward conversations or lost records.
+              </p>
+            </div>
+
+            {/* Pipeline Step Cards */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-4">
+              {[
+                {
+                  step: "1",
+                  title: "Customer",
+                  subtitle: "గ్రాహకుడు / ग्राहक",
+                  icon: User,
+                  color: "from-blue-600 to-indigo-600",
+                  textColor: "text-blue-400",
+                  desc: "Select or register customer in 3 seconds with mobile number and credit limit."
+                },
+                {
+                  step: "2",
+                  title: "Purchase",
+                  subtitle: "కొనుగోలు / खरीद",
+                  icon: ShoppingBag,
+                  color: "from-indigo-600 to-purple-600",
+                  textColor: "text-indigo-400",
+                  desc: "Add products or enter total cart amount directly from store inventory."
+                },
+                {
+                  step: "3",
+                  title: "Credit",
+                  subtitle: "ఉధార్ / उधार",
+                  icon: CreditCard,
+                  color: "from-red-600 to-rose-600",
+                  textColor: "text-red-400",
+                  desc: "Tap 'You Gave ₹' to log outstanding amount with date, time, and note."
+                },
+                {
+                  step: "4",
+                  title: "Payment",
+                  subtitle: "చెల్లింపు / भुगतान",
+                  icon: Banknote,
+                  color: "from-emerald-600 to-teal-600",
+                  textColor: "text-emerald-400",
+                  desc: "Record partial or full payment via Cash or Instant Scan-to-Pay UPI QR."
+                },
+                {
+                  step: "5",
+                  title: "Balance",
+                  subtitle: "బకాయి / बकाया",
+                  icon: Scale,
+                  color: "from-amber-600 to-orange-600",
+                  textColor: "text-amber-400",
+                  desc: "Remaining net balance updates in real-time. Zero calculations required."
+                },
+                {
+                  step: "6",
+                  title: "Reminder",
+                  subtitle: "రిమైండర్ / अनुस्मारक",
+                  icon: Bell,
+                  color: "from-cyan-600 to-blue-600",
+                  textColor: "text-cyan-400",
+                  desc: "1-Click WhatsApp & SMS reminder with UPI link in Telugu, Hindi, or English."
+                }
+              ].map((s, idx) => {
+                const Icon = s.icon;
+                return (
+                  <div 
+                    key={idx} 
+                    className="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between gap-4 relative hover:border-slate-700 transition group shadow-lg"
+                  >
+                    {/* Step Number Badge */}
+                    <div className="flex justify-between items-start">
+                      <span className={`w-8 h-8 rounded-xl bg-gradient-to-br ${s.color} text-white font-black text-xs flex items-center justify-center shadow`}>
+                        0{s.step}
+                      </span>
+                      <Icon size={20} className={s.textColor} />
+                    </div>
+
+                    <div>
+                      <h4 className="font-extrabold text-base text-white group-hover:text-primary-400 transition">
+                        {s.title}
+                      </h4>
+                      <p className="text-[10px] text-slate-500 font-medium">{s.subtitle}</p>
+                      <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                        {s.desc}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800/80 flex items-center gap-1 text-[11px] font-bold text-slate-500">
+                      <span>Step {s.step}</span>
+                      {idx < 5 && <ArrowRight size={12} className="text-slate-600 ml-auto" />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Launch Digital Khata CTA */}
+            <div className="mt-4 p-6 sm:p-8 bg-gradient-to-r from-red-600/20 via-amber-600/20 to-emerald-600/20 border border-slate-700/80 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left shadow-xl">
+              <div>
+                <h4 className="text-xl font-black text-white">
+                  Ready to digitize your store's Udhar Khata?
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  100% Free, Secure, and designed specifically for Indian Retailers.
+                </p>
+              </div>
+              <button
+                onClick={onEnterDemo}
+                className="px-6 py-3.5 bg-primary-600 hover:bg-primary-500 text-white font-black text-sm rounded-xl shadow-xl hover:shadow-primary-500/30 flex items-center gap-2 shrink-0 transition"
+              >
+                <BookOpen size={18} /> Open Digital Khata Book
+              </button>
+            </div>
+          </div>
+
         </div>
       </section>
 

@@ -2084,6 +2084,48 @@ export default function UdharDashboard({ lang: appLang }) {
           </div>
         </div>
       )}
+
+      {/* 6-Step Khata Lifecycle Pipeline Card at Bottom */}
+      <div className="mt-8 bg-gradient-to-r from-gray-900 via-slate-900 to-gray-900 border border-gray-800 rounded-3xl p-6 text-white shadow-xl">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-5 pb-4 border-b border-gray-800">
+          <div>
+            <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+              Automated Shopkeeper Protection Flow
+            </span>
+            <h3 className="text-lg font-black text-white mt-1">
+              Customer → Purchase → Credit → Payment → Balance → Reminder
+            </h3>
+            <p className="text-xs text-gray-400">
+              Never forget who took credit, how much is remaining, or who has overdue payments.
+            </p>
+          </div>
+          <span className="text-xs font-mono font-bold text-gray-500 bg-gray-800/80 px-3 py-1.5 rounded-xl border border-gray-700">
+            6-Stage Udhar Lifecycle
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[
+            { step: "1", title: "Customer", q: "Who took it?", sub: "Name, Mobile & Credit Limit", color: "text-blue-400", bg: "bg-blue-950/40 border-blue-900/40" },
+            { step: "2", title: "Purchase", q: "What & When?", sub: "Itemized Bill & Cart Items", color: "text-indigo-400", bg: "bg-indigo-950/40 border-indigo-900/40" },
+            { step: "3", title: "Credit", q: "How much taken?", sub: "🔴 'You Gave ₹' Entry", color: "text-red-400", bg: "bg-red-950/40 border-red-900/40" },
+            { step: "4", title: "Payment", q: "How much paid?", sub: "🟢 Cash / UPI QR Scan", color: "text-emerald-400", bg: "bg-emerald-950/40 border-emerald-900/40" },
+            { step: "5", title: "Balance", q: "How much remaining?", sub: "Auto Live Ledger Balance", color: "text-amber-400", bg: "bg-amber-950/40 border-amber-900/40" },
+            { step: "6", title: "Reminder", q: "Who is overdue?", sub: "1-Click WhatsApp Reminder", color: "text-cyan-400", bg: "bg-cyan-950/40 border-cyan-900/40" }
+          ].map((st, i) => (
+            <div key={i} className={`p-3.5 rounded-2xl border ${st.bg} flex flex-col justify-between gap-2 shadow-sm`}>
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black font-mono text-gray-400">STAGE 0{st.step}</span>
+                <span className={`text-xs font-black ${st.color}`}>{st.title}</span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white leading-tight">{st.q}</p>
+                <p className="text-[10px] text-gray-400 mt-1">{st.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

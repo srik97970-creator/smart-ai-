@@ -25,11 +25,11 @@
     "name": "pavansai",
     "phone": "9440908343",
     "total_spending": 87683,
-    "debt_balance": 87433,
+    "debt_balance": 0,
     "last_purchase": "2026-09-01T05:25:47.325Z",
     "id": "cus_5450_092",
     "created_at": "2026-08-31T17:40:55.450Z",
-    "updated_at": "2026-09-01T05:25:47.326Z"
+    "updated_at": "2026-09-03T04:58:22.977Z"
   },
   {
     "name": "rithwik",
@@ -45,10 +45,10 @@
     "name": "gopichand",
     "phone": "9121513653",
     "total_spending": 15,
-    "debt_balance": 15,
+    "debt_balance": 0,
     "last_purchase": "2026-09-01T06:06:10.944Z",
     "id": "cus_0925_357",
     "created_at": "2026-09-01T06:06:10.925Z",
-    "updated_at": "2026-09-01T06:06:10.946Z"
+    "updated_at": "2026-09-03T04:58:31.201Z"
   }
 ]
