@@ -5,8 +5,11 @@ import {
   RefreshCw, 
   Palette, 
   AlertTriangle, 
+  AlertCircle,
   Sparkles,
   Calendar,
+  Clock,
+  Timer,
   MessageSquare,
   Copy,
   Check,
@@ -15,8 +18,66 @@ import {
 } from 'lucide-react';
 import { t } from '../utils/translations';
 
+// Check if an offer has begun and has not expired
+function isOfferActive(o, currentNow) {
+  if (!o) return false;
+  if (o.status === 'expired' || o.is_expired) return false;
+  
+  // Exact expiration check
+  let expiry = null;
+  if (o.expires_at) {
+    expiry = new Date(o.expires_at);
+  } else if (o.end_date) {
+    const timeStr = o.end_time || '23:59';
+    expiry = new Date(`${o.end_date}T${timeStr.length === 5 ? timeStr + ':00' : timeStr}`);
+  }
+
+  if (expiry && !isNaN(expiry.getTime()) && currentNow.getTime() >= expiry.getTime()) {
+    return false; // Offer has expired
+  }
+
+  // Exact start check (when offer begins)
+  if (o.start_date) {
+    const start = new Date(`${o.start_date}T00:00:00`);
+    if (!isNaN(start.getTime()) && currentNow.getTime() < start.getTime()) {
+      return false; // Offer has not begun yet
+    }
+  }
+
+  return true;
+}
+
+// Real-time countdown helper
+function getCountdown(expiresAt, currentNow) {
+  if (!expiresAt) return { text: 'Active', remainingSeconds: Infinity };
+  const diff = new Date(expiresAt).getTime() - currentNow.getTime();
+  if (diff <= 0) return { text: 'Expired', remainingSeconds: 0 };
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / 1000 / 60) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+  if (days > 0) return { text: `${days}d ${hours}h ${minutes}m ${seconds}s`, remainingSeconds: Math.floor(diff / 1000) };
+  return { text: `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`, remainingSeconds: Math.floor(diff / 1000) };
+}
+
+// Format exact date & time
+function formatExactDateTime(isoString) {
+  if (!isoString) return 'While stocks last';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return isoString;
+  return d.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+}
+
 export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }) {
   const [offers, setOffers] = useState([]);
+  const [now, setNow] = useState(new Date());
   const [pamphletsCount, setPamphletsCount] = useState(6); // Cumulative tracker mock
   const [selectedOfferId, setSelectedOfferId] = useState('');
   
@@ -35,6 +96,14 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [customPhone, setCustomPhone] = useState('');
 
+  // Real-time ticking clock (updates every second for exact countdown and auto-disappear)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Fetch customers for WhatsApp direct targeting
   useEffect(() => {
     fetch('/api/customers')
@@ -43,19 +112,17 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
       .catch(err => console.error('Error fetching customers in PamphletGenerator:', err));
   }, []);
 
-  useEffect(() => {
+  const fetchOffers = () => {
     fetch('/api/offers')
       .then(res => res.json())
       .then(data => {
-        setOffers(data);
-        // If loaded with parameter from offers list action click, immediately select it
-        if (data.length > 0 && params && params.autoLoadOfferId) {
-          setSelectedOfferId(params.autoLoadOfferId);
-        } else if (data.length > 0) {
-          setSelectedOfferId(data[0].id);
-        }
+        setOffers(Array.isArray(data) ? data : []);
       })
       .catch(err => console.error('Error fetching offers for pamphlet:', err));
+  };
+
+  useEffect(() => {
+    fetchOffers();
   }, [params]);
 
   // Sync pamphlet generator language when app language changes
@@ -63,7 +130,34 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
     setPamphletLang(lang);
   }, [lang]);
 
-  const selectedOffer = offers.find(o => o.id === selectedOfferId);
+  // Only currently active, non-expired offers that have begun
+  const activeOffers = offers.filter(o => isOfferActive(o, now));
+
+  // Automatically update selected offer when offers list or active status changes
+  useEffect(() => {
+    if (activeOffers.length > 0) {
+      if (!selectedOfferId || !activeOffers.some(o => o.id === selectedOfferId)) {
+        if (params && params.autoLoadOfferId && activeOffers.some(o => o.id === params.autoLoadOfferId)) {
+          setSelectedOfferId(params.autoLoadOfferId);
+        } else {
+          setSelectedOfferId(activeOffers[0].id);
+        }
+      }
+    } else {
+      setSelectedOfferId('');
+    }
+  }, [offers, activeOffers.length, selectedOfferId, params]);
+
+  const selectedOffer = activeOffers.find(o => o.id === selectedOfferId);
+
+  // Sync validity text automatically with the exact date & time when active offer changes
+  useEffect(() => {
+    if (selectedOffer && selectedOffer.expires_at) {
+      setValidityText(`Valid till: ${formatExactDateTime(selectedOffer.expires_at)}`);
+    } else if (!selectedOffer) {
+      setValidityText('Offer expired');
+    }
+  }, [selectedOffer?.id, selectedOffer?.expires_at]);
 
   // Prefill title text based on template
   useEffect(() => {
@@ -277,11 +371,18 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
               {/* Select Active Offer */}
               <div className="flex flex-col gap-1">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Select Active Offer</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1.5">
+                    <span>Select Active Offer</span>
+                    {activeOffers.length > 0 && (
+                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                        {activeOffers.length} Active
+                      </span>
+                    )}
+                  </label>
                   <button 
                     type="button"
                     onClick={() => navigateTo('offers')}
-                    className="text-[10px] font-bold text-primary-600 dark:text-primary-400 hover:underline"
+                    className="text-[10px] font-bold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer"
                   >
                     + Create/Edit Offers
                   </button>
@@ -289,12 +390,17 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
                 <select
                   value={selectedOfferId}
                   onChange={(e) => setSelectedOfferId(e.target.value)}
-                  className="bg-gray-50 dark:bg-gray-755 border border-gray-200 dark:border-gray-655 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 w-full"
+                  className="bg-gray-50 dark:bg-gray-755 border border-gray-200 dark:border-gray-655 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 w-full font-semibold"
                 >
-                  <option value="">-- Choose active discount --</option>
-                  {offers.map(o => (
-                    <option key={o.id} value={o.id}>{o.product_name} (₹{o.offer_price})</option>
-                  ))}
+                  {activeOffers.length === 0 ? (
+                    <option value="">-- No active offers running right now --</option>
+                  ) : (
+                    activeOffers.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {o.product_name} (₹{o.offer_price})
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 
@@ -366,7 +472,14 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
               
               {/* Flyer canvas mockup */}
               <div className="sm:col-span-6 flex flex-col gap-3">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Live Flyer Preview:</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Live Flyer Preview</span>
+                  {selectedOffer.expires_at && (
+                    <span className="text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 shadow-2xs">
+                      <Clock size={11} /> ⏳ {getCountdown(selectedOffer.expires_at, now).text} left
+                    </span>
+                  )}
+                </div>
                 
                 {/* Pamphlet card graphics */}
                 <div className={`bg-gradient-to-b ${activeTheme.bg} p-6 rounded-3xl border-4 ${activeTheme.cardBorder} text-center flex flex-col justify-between aspect-[3/4] shadow-2xl relative overflow-hidden select-none`}>
@@ -421,14 +534,14 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
                   <button
                     onClick={handleDownload}
                     disabled={downloading}
-                    className="flex-1 bg-primary-600 hover:bg-primary-500 disabled:bg-gray-300 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-1.5"
+                    className="flex-1 bg-primary-600 hover:bg-primary-500 disabled:bg-gray-300 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     {downloading ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
                     {downloading ? 'Downloading...' : 'Download flyer'}
                   </button>
                   <button
                     onClick={() => setShowShareModal(true)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5"
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Share2 size={14} /> WhatsApp Share
                   </button>
@@ -445,7 +558,7 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
                     <span className="font-extrabold text-green-600 dark:text-green-400 flex items-center gap-1"><MessageSquare size={14} /> WhatsApp Message</span>
                     <button
                       onClick={() => handleCopyText(publicityCopy.whatsapp, 'wa')}
-                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-gray-600 transition"
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-gray-600 transition cursor-pointer"
                       title="Copy message"
                     >
                       {copiedText === 'wa' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
@@ -462,7 +575,7 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
                     <span className="font-extrabold text-indigo-500 flex items-center gap-1">📸 Social Media Caption</span>
                     <button
                       onClick={() => handleCopyText(publicityCopy.instagram, 'ig')}
-                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-gray-600 transition"
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-gray-600 transition cursor-pointer"
                       title="Copy Caption"
                     >
                       {copiedText === 'ig' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
@@ -476,9 +589,28 @@ export default function PamphletGenerator({ lang, navigateTo, params, shopInfo }
 
             </div>
           ) : (
-            <p className="text-center text-gray-400 py-12 text-sm bg-white dark:bg-gray-800 border rounded-2xl border-gray-150 dark:border-gray-700">
-              No active offers found. Please navigate to the <strong>Offers Engine</strong> to generate a promotion discount first.
-            </p>
+            <div className="bg-white dark:bg-gray-800 p-8 sm:p-12 rounded-3xl border-2 border-dashed border-red-200 dark:border-red-900/60 shadow-sm text-center flex flex-col items-center justify-center gap-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center border border-red-200 dark:border-red-800 shadow-sm">
+                <Timer size={32} />
+              </div>
+              <div className="max-w-md flex flex-col gap-2 items-center">
+                <span className="text-[11px] font-black uppercase tracking-wider text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 px-3 py-1 rounded-full border border-red-200 dark:border-red-900">
+                  ⏳ Offer Expired — Flyer Automatically Removed
+                </span>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white mt-1">
+                  Promotional Flyer Disappeared
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  When an offer reaches its exact expiration date & time, the promotional flyer is automatically hidden and removed so customers never see outdated deals. As soon as a new offer begins or you extend the duration in the Offers section, your flyer will appear here again automatically!
+                </p>
+              </div>
+              <button
+                onClick={() => navigateTo('offers')}
+                className="mt-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles size={14} /> Go to Offers to Create or Extend
+              </button>
+            </div>
           )}
         </div>
 

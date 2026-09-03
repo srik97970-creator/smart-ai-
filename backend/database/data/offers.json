@@ -6,9 +6,12 @@
     "discount": 10,
     "offer_price": 45,
     "start_date": "2026-08-31",
-    "end_date": "2026-09-07",
-    "status": "active",
+    "end_date": "2026-09-03",
+    "status": "expired",
     "id": "off_1558_635",
-    "created_at": "2026-08-31T15:25:01.558Z"
+    "created_at": "2026-08-31T15:25:01.558Z",
+    "end_time": "10:50",
+    "expires_at": "2026-09-03T05:20:00.000Z",
+    "updated_at": "2026-09-03T05:20:15.448Z"
   }
 ]
