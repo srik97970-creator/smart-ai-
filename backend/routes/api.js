@@ -282,14 +282,47 @@ router.post('/expenses', async (req, res) => {
 router.get('/offers', async (req, res) => {
   try {
     const offers = await db.find('offers');
+    const now = new Date();
     const enriched = [];
+
     for (const o of offers) {
+      // Calculate exact expiration datetime
+      let expiryDateTime = null;
+      if (o.expires_at) {
+        expiryDateTime = new Date(o.expires_at);
+      } else if (o.end_date) {
+        const timePart = o.end_time || '23:59:59';
+        expiryDateTime = new Date(`${o.end_date}T${timePart.length === 5 ? timePart + ':00' : timePart}`);
+      }
+
+      // Check if current time has passed exact expiration date and time
+      const isExpired = expiryDateTime ? now.getTime() >= expiryDateTime.getTime() : false;
+      let status = o.status || 'active';
+      
+      // If the exact expiration date and time has passed, auto-expire it
+      if (isExpired && status === 'active') {
+        status = 'expired';
+        try {
+          await db.update('offers', o.id, { status: 'expired' });
+        } catch (e) {
+          console.error('Error auto-expiring offer:', e);
+        }
+      }
+
       const p = await db.findById('products', o.product_id);
+      const remainingSeconds = expiryDateTime ? Math.max(0, Math.floor((expiryDateTime.getTime() - now.getTime()) / 1000)) : null;
+
       enriched.push({
         ...o,
+        status,
+        end_time: o.end_time || '23:59',
+        expires_at: expiryDateTime ? expiryDateTime.toISOString() : null,
+        is_expired: isExpired,
+        remaining_seconds: remainingSeconds,
         product_name: p ? p.name : 'Unknown Product'
       });
     }
+
     res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -297,12 +330,23 @@ router.get('/offers', async (req, res) => {
 });
 
 router.post('/offers', async (req, res) => {
-  const { product_id, offer_type, original_price, discount, offer_price, start_date, end_date } = req.body;
+  const { product_id, offer_type, original_price, discount, offer_price, start_date, end_date, end_time, expires_at } = req.body;
   if (!product_id || !offer_type || original_price === undefined || discount === undefined || offer_price === undefined || !start_date || !end_date) {
     return res.status(400).json({ error: 'Missing offer parameter fields' });
   }
 
   try {
+    const exactTime = end_time || '23:59';
+    let exactExpiresAt = expires_at;
+    if (!exactExpiresAt) {
+      const timeString = exactTime.length === 5 ? exactTime + ':00' : exactTime;
+      exactExpiresAt = new Date(`${end_date}T${timeString}`).toISOString();
+    }
+
+    const now = new Date();
+    const expiryDateTime = new Date(exactExpiresAt);
+    const isExpired = now.getTime() >= expiryDateTime.getTime();
+
     const offer = await db.insert('offers', {
       product_id,
       offer_type,
@@ -311,9 +355,41 @@ router.post('/offers', async (req, res) => {
       offer_price: Number(offer_price),
       start_date,
       end_date,
-      status: 'active'
+      end_time: exactTime,
+      expires_at: exactExpiresAt,
+      status: isExpired ? 'expired' : 'active'
     });
     res.status(201).json(offer);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/offers/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { end_date, end_time, expires_at, status } = req.body;
+    const updateData = { ...req.body };
+    
+    if (end_date) {
+      const exactTime = end_time || '23:59';
+      const timeString = exactTime.length === 5 ? exactTime + ':00' : exactTime;
+      updateData.end_time = exactTime;
+      updateData.expires_at = new Date(`${end_date}T${timeString}`).toISOString();
+      
+      const now = new Date();
+      if (new Date(updateData.expires_at).getTime() > now.getTime()) {
+        updateData.status = 'active';
+      } else {
+        updateData.status = 'expired';
+      }
+    }
+
+    const updated = await db.update('offers', id, updateData);
+    if (!updated) {
+      return res.status(404).json({ error: 'Offer not found' });
+    }
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

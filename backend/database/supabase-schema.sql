@@ -95,6 +95,8 @@ CREATE TABLE IF NOT EXISTS offers (
     offer_price NUMERIC(10,2) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    end_time TEXT DEFAULT '23:59',
+    expires_at TIMESTAMP WITH TIME ZONE,
     status TEXT DEFAULT 'active',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
